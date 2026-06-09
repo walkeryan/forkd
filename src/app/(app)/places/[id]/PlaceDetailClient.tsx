@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StarRating from '@/components/StarRating'
 import PhotoLightbox from '@/components/PhotoLightbox'
-import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft } from 'lucide-react'
+import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft, Tag as TagIcon } from 'lucide-react'
 
-export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
+export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPlace: any; allTags?: { id: string; name: string }[] }) {
   const router = useRouter()
-  const { place, meals, visits, photos } = userPlace
+  const { place, meals, visits, photos, tags } = userPlace
   const [rating, setRating] = useState<number | null>(userPlace.rating)
   const [priceRange, setPriceRange] = useState<number | null>(userPlace.priceRange)
   const [notes, setNotes] = useState(userPlace.notes ?? '')
@@ -150,6 +150,28 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
     router.refresh()
   }
 
+  const [tagInput, setTagInput] = useState('')
+  async function addTag(name: string) {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    setTagInput('')
+    await fetch(`/api/places/${userPlace.id}/tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: trimmed }),
+    })
+    router.refresh()
+  }
+
+  async function removeTag(tagId: string) {
+    await fetch(`/api/places/${userPlace.id}/tags/${tagId}`, { method: 'DELETE' })
+    router.refresh()
+  }
+
+  // Suggest the user's other tags not already on this place.
+  const attachedIds = new Set(tags.map((t: any) => t.tag.id))
+  const suggestions = allTags.filter((t) => !attachedIds.has(t.id))
+
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
       {/* Back navigation */}
@@ -213,6 +235,41 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
           className="mt-2 w-full bg-gray-100 text-gray-700 rounded-xl py-2 text-sm font-medium disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Notes'}
         </button>
+      </div>
+
+      {/* Tags card */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-2 font-medium text-gray-700 mb-3">
+          <TagIcon className="w-4 h-4" />
+          <span>Tags</span>
+        </div>
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {tags.map((t: any) => (
+              <span key={t.tag.id} className="flex items-center gap-1 bg-orange-50 text-orange-600 rounded-full pl-3 pr-1.5 py-1 text-xs font-medium">
+                {t.tag.name}
+                <button onClick={() => removeTag(t.tag.id)} aria-label={`Remove ${t.tag.name}`} className="hover:bg-orange-100 rounded-full p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <form onSubmit={(e) => { e.preventDefault(); addTag(tagInput) }} className="flex gap-2">
+          <input
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            list="tag-suggestions"
+            placeholder="Add a tag…"
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
+          <datalist id="tag-suggestions">
+            {suggestions.map((t) => <option key={t.id} value={t.name} />)}
+          </datalist>
+          <button type="submit" disabled={!tagInput.trim()} className="bg-orange-500 text-white rounded-lg px-3 text-sm font-medium disabled:opacity-50">
+            Add
+          </button>
+        </form>
       </div>
 
       {/* Meals card */}
