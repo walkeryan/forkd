@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StarRating from '@/components/StarRating'
-import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X } from 'lucide-react'
+import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft } from 'lucide-react'
 
 export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const router = useRouter()
@@ -150,6 +150,14 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
+      {/* Back navigation */}
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-1 text-sm text-gray-500 -ml-1 active:text-gray-700"
+      >
+        <ArrowLeft className="w-4 h-4" /> My Places
+      </button>
+
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
