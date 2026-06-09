@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import StarRating from '@/components/StarRating'
 import PhotoLightbox from '@/components/PhotoLightbox'
 import { cuisineChip } from '@/lib/places'
+import { getMenuSuggestions } from '@/lib/menuData'
 import type { UserPlaceWithRelations, MealWithRelations, VisitWithRelations, PlaceTagWithTag } from '@/types/models'
 import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft, Tag as TagIcon } from 'lucide-react'
 
@@ -19,6 +20,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
   const [showVisitForm, setShowVisitForm] = useState(false)
   const [mealName, setMealName] = useState('')
   const [mealNotes, setMealNotes] = useState('')
+  const [dishFilter, setDishFilter] = useState('')
   const [mealFav, setMealFav] = useState(false)
   const [mealRating, setMealRating] = useState<number | null>(null)
   const [visitNotes, setVisitNotes] = useState('')
@@ -131,7 +133,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userPlaceId: userPlace.id, name: mealName, description: mealNotes, isFavorite: mealFav, rating: mealRating }),
     }), 'Meal added')
-    if (ok) { setMealName(''); setMealNotes(''); setMealFav(false); setMealRating(null); setShowMealForm(false) }
+    if (ok) { setMealName(''); setMealNotes(''); setMealFav(false); setMealRating(null); setDishFilter(''); setShowMealForm(false) }
   }
 
   async function logVisit() {
@@ -179,6 +181,13 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
   // Suggest the user's other tags not already on this place.
   const attachedIds = new Set(tags.map((t: PlaceTagWithTag) => t.tag.id))
   const suggestions = allTags.filter((t) => !attachedIds.has(t.id))
+
+  // Dish suggestions for the meal form, keyed off the place name + cuisine.
+  const dishSuggestions = getMenuSuggestions(place.name, place.cuisine ?? '')
+  const dishQuery = dishFilter.trim().toLowerCase()
+  const filteredDishes = dishQuery
+    ? dishSuggestions.filter((d) => d.toLowerCase().includes(dishQuery))
+    : dishSuggestions
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
@@ -301,6 +310,35 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
         </div>
         {showMealForm && (
           <div className="mb-3 space-y-2 bg-orange-50 rounded-xl p-3">
+            {dishSuggestions.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-gray-500">Popular dishes</span>
+                  <input
+                    value={dishFilter}
+                    onChange={e => setDishFilter(e.target.value)}
+                    placeholder="Filter…"
+                    className="w-28 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                </div>
+                {filteredDishes.length > 0 ? (
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                    {filteredDishes.map((dish) => (
+                      <button
+                        key={dish}
+                        type="button"
+                        onClick={() => setMealName(dish)}
+                        className={`flex-shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition ${mealName === dish ? 'bg-orange-500 text-white border-orange-500' : 'border-orange-400 text-orange-600 bg-white active:bg-orange-100'}`}
+                      >
+                        {dish}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400">No dishes match “{dishFilter.trim()}”.</p>
+                )}
+              </div>
+            )}
             <input value={mealName} onChange={e => setMealName(e.target.value)} placeholder="Meal name *"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
             <input value={mealNotes} onChange={e => setMealNotes(e.target.value)} placeholder="Description (optional)"
