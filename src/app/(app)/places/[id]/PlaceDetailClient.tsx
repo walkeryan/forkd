@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StarRating from '@/components/StarRating'
+import PhotoLightbox from '@/components/PhotoLightbox'
 import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft } from 'lucide-react'
 
 export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
@@ -22,6 +23,7 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0])
   const [visitRating, setVisitRating] = useState<number | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -374,9 +376,11 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
           <p className="text-sm text-gray-400">No photos yet — tap + to add one</p>
         ) : (
           <div className="grid grid-cols-3 gap-1.5">
-            {photos.map((photo: any) => (
+            {photos.map((photo: any, i: number) => (
               <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
-                <img src={`/api/photos/${photo.id}`} alt={photo.caption ?? ''} className="w-full h-full object-cover" />
+                <button type="button" onClick={() => setLightboxIndex(i)} className="block w-full h-full" aria-label="View photo">
+                  <img src={`/api/photos/${photo.id}`} alt={photo.caption ?? ''} className="w-full h-full object-cover" />
+                </button>
                 <button
                   type="button"
                   onClick={() => deletePhoto(photo.id)}
@@ -420,6 +424,13 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
           </div>
         </div>
       )}
+
+      <PhotoLightbox
+        photos={photos}
+        index={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onNavigate={setLightboxIndex}
+      />
     </div>
   )
 }
