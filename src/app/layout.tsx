@@ -11,7 +11,14 @@ export const metadata: Metadata = {
   title: { default: "Fork'd", template: "%s | Fork'd" },
   description: 'Track your favorite places and meals',
   manifest: '/manifest.json',
-  icons: { icon: '/favicon.ico', apple: '/apple-touch-icon.png' },
+  icons: {
+    icon: [
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
   appleWebApp: { capable: true, statusBarStyle: 'default', title: "Fork'd" },
 }
 

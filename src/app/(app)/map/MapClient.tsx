@@ -37,7 +37,7 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
     const w = window as unknown as { gm_authFailure?: () => void }
     w.gm_authFailure = () => {
       console.error(
-        '[Fork'd] Google Maps failed to authenticate. Check that NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is correct and that the "Maps JavaScript API" is enabled (and not referrer-restricted) on the Google Cloud project.',
+        "[Fork'd] Google Maps failed to authenticate. Check that NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is correct and that the \"Maps JavaScript API\" is enabled (and not referrer-restricted) on the Google Cloud project.",
       )
     }
     return () => {
@@ -47,7 +47,7 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
 
   useEffect(() => {
     if (loadError) {
-      console.error('[Fork'd] Google Maps JS failed to load:', loadError)
+      console.error("[Fork'd] Google Maps JS failed to load:", loadError)
     }
   }, [loadError])
 
@@ -65,7 +65,7 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
   }, [])
 
   if (!apiKey) {
-    console.error('[Fork'd] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set — the map cannot load.')
+    console.error("[Fork'd] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set — the map cannot load.")
     return (
       <div className="h-full w-full flex flex-col items-center justify-center text-center text-gray-400 px-6">
         <MapPin className="w-10 h-10 mb-2 opacity-30" />

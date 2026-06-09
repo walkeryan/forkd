@@ -13,5 +13,8 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.json|icon-|icons).*)'],
+  // Exclude Next internals, the manifest, and any static asset with a file
+  // extension (favicons, the logo, app icons, images) so unauthenticated
+  // requests for them aren't redirected to /signin.
+  matcher: ['/((?!_next/static|_next/image|manifest.json|.*\\.(?:png|svg|ico|jpg|jpeg|webp|gif)).*)'],
 }
