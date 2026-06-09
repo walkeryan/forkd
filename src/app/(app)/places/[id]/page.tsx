@@ -20,5 +20,9 @@ export default async function PlaceDetailPage({ params }: { params: { id: string
     prisma.tag.findMany({ where: { userId }, orderBy: { name: 'asc' } }),
   ])
   if (!userPlace) notFound()
-  return <PlaceDetailClient userPlace={userPlace} allTags={allTags} />
+  const specials = await prisma.placeSpecial.findMany({
+    where: { placeId: userPlace.placeId },
+    orderBy: [{ dayOfWeek: 'asc' }, { createdAt: 'asc' }],
+  })
+  return <PlaceDetailClient userPlace={userPlace} allTags={allTags} specials={specials} />
 }

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MapPin, Search, X, Loader2, LocateFixed, PenLine, Check, Bookmark } from 'lucide-react'
 import { cuisineChip } from '@/lib/places'
+import MealForm from '@/components/MealForm'
 
 type AddMode = 'visited' | 'wishlist'
 
@@ -53,6 +54,9 @@ export default function AddPlaceModal({
   const [creatingId, setCreatingId] = useState<string | null>(null)
   const [manualOpen, setManualOpen] = useState(false)
   const [manual, setManual] = useState({ name: '', address: '' })
+  // After adding a visited place we stay open on a meal-logging step.
+  const [step, setStep] = useState<'search' | 'meal'>('search')
+  const [addedPlace, setAddedPlace] = useState<{ userPlaceId: string; name: string; cuisine: string | null } | null>(null)
 
   const fetchNearby = useCallback(async (c: Coords) => {
     setLoadingNearby(true)
@@ -119,6 +123,8 @@ export default function AddPlaceModal({
     setCreatingId(null)
     setManualOpen(false)
     setManual({ name: '', address: '' })
+    setStep('search')
+    setAddedPlace(null)
     requestLocation()
   }, [open, requestLocation])
 
@@ -159,7 +165,11 @@ export default function AddPlaceModal({
     }
   }, [query, coords])
 
-  async function createPlace(payload: Record<string, unknown>, key: string) {
+  async function createPlace(
+    payload: Record<string, unknown>,
+    key: string,
+    display: { name: string; cuisine: string | null },
+  ) {
     setCreatingId(key)
     setError(null)
     try {
@@ -175,7 +185,14 @@ export default function AddPlaceModal({
         setCreatingId(null)
         return
       }
-      onSuccess(mode === 'wishlist' ? data.wishlistItemId : data.userPlaceId, mode)
+      // Wishlist adds close immediately; visited adds move to a meal-log step.
+      if (mode === 'wishlist') {
+        onSuccess(data.wishlistItemId, mode)
+        return
+      }
+      setCreatingId(null)
+      setAddedPlace({ userPlaceId: data.userPlaceId, name: display.name, cuisine: display.cuisine })
+      setStep('meal')
     } catch {
       setError('Could not add place')
       setCreatingId(null)
@@ -193,13 +210,23 @@ export default function AddPlaceModal({
         placeType: p.placeType,
       },
       p.googlePlaceId,
+      { name: p.name, cuisine: p.placeType || null },
     )
   }
 
   function submitManual(e: React.FormEvent) {
     e.preventDefault()
     if (!manual.name.trim()) return
-    createPlace({ name: manual.name.trim(), address: manual.address.trim() }, 'manual')
+    createPlace({ name: manual.name.trim(), address: manual.address.trim() }, 'manual', {
+      name: manual.name.trim(),
+      cuisine: null,
+    })
+  }
+
+  // Finish the meal step — whether the user logged a meal or skipped — by
+  // handing the new place's id back to the parent for navigation.
+  function finishMealStep() {
+    if (addedPlace) onSuccess(addedPlace.userPlaceId, 'visited')
   }
 
   if (!open) return null
@@ -223,12 +250,36 @@ export default function AddPlaceModal({
       <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-xl max-h-[88vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900">Add a Place</h2>
-          <button onClick={onClose} className="text-gray-400 p-1" aria-label="Close">
+          <h2 className="text-lg font-bold text-gray-900">
+            {step === 'meal' ? 'Log a Meal' : 'Add a Place'}
+          </h2>
+          <button onClick={step === 'meal' ? finishMealStep : onClose} className="text-gray-400 p-1" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {step === 'meal' && addedPlace ? (
+          <div className="overflow-y-auto px-5 py-4 space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-gray-900">You&apos;re at {addedPlace.name}! What did you have?</h3>
+              <p className="text-sm text-gray-400 mt-0.5">Log your dish now, or skip and add it later.</p>
+            </div>
+            <MealForm
+              userPlaceId={addedPlace.userPlaceId}
+              placeName={addedPlace.name}
+              cuisine={addedPlace.cuisine}
+              autoFocus
+              submitLabel="Add Meal"
+              onSaved={finishMealStep}
+            />
+            <button
+              onClick={finishMealStep}
+              className="w-full text-center text-sm text-gray-500 py-1 active:text-gray-700"
+            >
+              Skip for now
+            </button>
+          </div>
+        ) : (
         <div className="overflow-y-auto px-5 py-4 space-y-4">
           {/* Visited vs. wishlist toggle */}
           <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1">
@@ -352,6 +403,7 @@ export default function AddPlaceModal({
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   )

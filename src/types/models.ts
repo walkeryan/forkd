@@ -15,3 +15,5 @@ export type UserPlaceWithRelations = Prisma.UserPlaceGetPayload<{
 export type MealWithRelations = UserPlaceWithRelations['meals'][number]
 export type VisitWithRelations = UserPlaceWithRelations['visits'][number]
 export type PlaceTagWithTag = UserPlaceWithRelations['tags'][number]
+
+export type PlaceSpecial = Prisma.PlaceSpecialGetPayload<object>

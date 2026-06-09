@@ -71,7 +71,23 @@ model Place {
   createdAt     DateTime @default(now())
   userPlaces    UserPlace[]
   wishlist      WishlistItem[]
+  specials      PlaceSpecial[]
   @@index([googlePlaceId])
+}
+
+model PlaceSpecial {
+  id          String   @id @default(cuid())
+  placeId     String
+  place       Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  type        String   // "happy_hour" | "weekly_special" | "trivia" | "live_music" | "brunch" | "other"
+  title       String
+  description String?
+  dayOfWeek   Int?     // 0=Sun, 1=Mon ... 6=Sat, null=daily/varies
+  startTime   String?  // "17:00"
+  endTime     String?  // "19:00"
+  isRecurring Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  @@index([placeId])
 }
 
 model UserPlace {
@@ -109,14 +125,18 @@ model Visit {
 }
 
 model Meal {
-  id          String  @id @default(cuid())
-  userPlaceId String
-  name        String
-  description String? @db.Text
-  rating      Float?
-  isFavorite  Boolean @default(false)
-  photos      Photo[]
-  userPlace   UserPlace @relation(fields: [userPlaceId], references: [id], onDelete: Cascade)
+  id              String  @id @default(cuid())
+  userPlaceId     String
+  name            String
+  description     String? @db.Text
+  rating          Float?
+  serviceRating   Int?
+  isFavorite      Boolean @default(false)
+  notes           String? @db.Text
+  serviceNotes    String? @db.Text
+  managementNotes String? @db.Text
+  photos          Photo[]
+  userPlace       UserPlace @relation(fields: [userPlaceId], references: [id], onDelete: Cascade)
   @@index([userPlaceId])
 }
 

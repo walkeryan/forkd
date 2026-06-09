@@ -20,7 +20,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       ...(body.name !== undefined && { name: body.name }),
       ...(body.description !== undefined && { description: body.description }),
       ...(body.rating !== undefined && { rating: body.rating }),
+      ...(body.serviceRating !== undefined && { serviceRating: body.serviceRating }),
       ...(body.isFavorite !== undefined && { isFavorite: body.isFavorite }),
+      ...(body.notes !== undefined && { notes: body.notes }),
+      ...(body.serviceNotes !== undefined && { serviceNotes: body.serviceNotes }),
+      ...(body.managementNotes !== undefined && { managementNotes: body.managementNotes }),
     },
   })
   return NextResponse.json(updated)

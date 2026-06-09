@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import StarRating from '@/components/StarRating'
 import PhotoLightbox from '@/components/PhotoLightbox'
+import MealForm from '@/components/MealForm'
+import PlaceSpecials from '@/components/PlaceSpecials'
 import { cuisineChip } from '@/lib/places'
-import { getMenuSuggestions } from '@/lib/menuData'
-import type { UserPlaceWithRelations, MealWithRelations, VisitWithRelations, PlaceTagWithTag } from '@/types/models'
+import type { UserPlaceWithRelations, MealWithRelations, VisitWithRelations, PlaceTagWithTag, PlaceSpecial } from '@/types/models'
 import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft, Tag as TagIcon } from 'lucide-react'
 
-export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPlace: UserPlaceWithRelations; allTags?: { id: string; name: string }[] }) {
+export default function PlaceDetailClient({ userPlace, allTags = [], specials = [] }: { userPlace: UserPlaceWithRelations; allTags?: { id: string; name: string }[]; specials?: PlaceSpecial[] }) {
   const router = useRouter()
   const { place, meals, visits, photos, tags } = userPlace
   const [rating, setRating] = useState<number | null>(userPlace.rating)
@@ -18,11 +19,6 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
   const [saving, setSaving] = useState(false)
   const [showMealForm, setShowMealForm] = useState(false)
   const [showVisitForm, setShowVisitForm] = useState(false)
-  const [mealName, setMealName] = useState('')
-  const [mealNotes, setMealNotes] = useState('')
-  const [dishFilter, setDishFilter] = useState('')
-  const [mealFav, setMealFav] = useState(false)
-  const [mealRating, setMealRating] = useState<number | null>(null)
   const [visitNotes, setVisitNotes] = useState('')
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0])
   const [visitRating, setVisitRating] = useState<number | null>(null)
@@ -126,16 +122,6 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
     setSaving(false)
   }
 
-  async function addMeal() {
-    if (!mealName.trim()) return
-    const ok = await mutate(() => fetch('/api/meals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userPlaceId: userPlace.id, name: mealName, description: mealNotes, isFavorite: mealFav, rating: mealRating }),
-    }), 'Meal added')
-    if (ok) { setMealName(''); setMealNotes(''); setMealFav(false); setMealRating(null); setDishFilter(''); setShowMealForm(false) }
-  }
-
   async function logVisit() {
     const ok = await mutate(() => fetch('/api/visits', {
       method: 'POST',
@@ -181,13 +167,6 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
   // Suggest the user's other tags not already on this place.
   const attachedIds = new Set(tags.map((t: PlaceTagWithTag) => t.tag.id))
   const suggestions = allTags.filter((t) => !attachedIds.has(t.id))
-
-  // Dish suggestions for the meal form, keyed off the place name + cuisine.
-  const dishSuggestions = getMenuSuggestions(place.name, place.cuisine ?? '')
-  const dishQuery = dishFilter.trim().toLowerCase()
-  const filteredDishes = dishQuery
-    ? dishSuggestions.filter((d) => d.toLowerCase().includes(dishQuery))
-    : dishSuggestions
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
@@ -309,49 +288,16 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
           </button>
         </div>
         {showMealForm && (
-          <div className="mb-3 space-y-2 bg-orange-50 rounded-xl p-3">
-            {dishSuggestions.length > 0 && (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-gray-500">Popular dishes</span>
-                  <input
-                    value={dishFilter}
-                    onChange={e => setDishFilter(e.target.value)}
-                    placeholder="Filter…"
-                    className="w-28 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  />
-                </div>
-                {filteredDishes.length > 0 ? (
-                  <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-                    {filteredDishes.map((dish) => (
-                      <button
-                        key={dish}
-                        type="button"
-                        onClick={() => setMealName(dish)}
-                        className={`flex-shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition ${mealName === dish ? 'bg-orange-500 text-white border-orange-500' : 'border-orange-400 text-orange-600 bg-white active:bg-orange-100'}`}
-                      >
-                        {dish}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-400">No dishes match “{dishFilter.trim()}”.</p>
-                )}
-              </div>
-            )}
-            <input value={mealName} onChange={e => setMealName(e.target.value)} placeholder="Meal name *"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            <input value={mealNotes} onChange={e => setMealNotes(e.target.value)} placeholder="Description (optional)"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Rating</span>
-              <StarRating value={mealRating} onChange={setMealRating} size="sm" />
-            </div>
-            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-              <input type="checkbox" checked={mealFav} onChange={e => setMealFav(e.target.checked)} className="accent-orange-500" />
-              Mark as favorite
-            </label>
-            <button onClick={addMeal} className="w-full bg-orange-500 text-white rounded-lg py-2 text-sm font-medium">Add Meal</button>
+          <div className="mb-3 bg-orange-50 rounded-xl p-3">
+            <MealForm
+              userPlaceId={userPlace.id}
+              placeName={place.name}
+              cuisine={place.cuisine}
+              submitLabel="Add Meal"
+              cancelLabel="Close"
+              onCancel={() => setShowMealForm(false)}
+              onSaved={() => { setShowMealForm(false); router.refresh() }}
+            />
           </div>
         )}
         {meals.length === 0 ? (
@@ -389,8 +335,16 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
                           <Star className="w-3 h-3 fill-orange-500" />{meal.rating.toFixed(1)}
                         </span>
                       )}
+                      {meal.serviceRating != null && (
+                        <span className="flex items-center gap-0.5 text-xs text-gray-400 font-medium">
+                          Service <Star className="w-3 h-3 fill-gray-400 text-gray-400" />{meal.serviceRating}
+                        </span>
+                      )}
                     </div>
                     {meal.description && <p className="text-xs text-gray-400">{meal.description}</p>}
+                    {meal.notes && <p className="text-xs text-gray-400">{meal.notes}</p>}
+                    {meal.serviceNotes && <p className="text-xs text-gray-400"><span className="text-gray-500 font-medium">Service:</span> {meal.serviceNotes}</p>}
+                    {meal.managementNotes && <p className="text-xs text-gray-400"><span className="text-gray-500 font-medium">Atmosphere:</span> {meal.managementNotes}</p>}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button onClick={() => startEditMeal(meal)} aria-label="Edit meal" className="text-gray-300 hover:text-gray-500 p-1"><Pencil className="w-4 h-4" /></button>
@@ -402,6 +356,9 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
           </div>
         )}
       </div>
+
+      {/* Specials card */}
+      <PlaceSpecials userPlaceId={userPlace.id} initial={specials} />
 
       {/* Visits card */}
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
