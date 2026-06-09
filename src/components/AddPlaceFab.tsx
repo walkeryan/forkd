@@ -1,12 +1,22 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import AddPlaceModal from '@/components/AddPlaceModal'
 
 export default function AddPlaceFab() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
+
+  // The nav "Add" tab redirects to /places?add=true so it shares this exact
+  // modal. Open on that param, then strip it so refresh/back behave sanely.
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      setOpen(true)
+      router.replace('/places')
+    }
+  }, [searchParams, router])
 
   function handleSuccess(userPlaceId: string) {
     setOpen(false)

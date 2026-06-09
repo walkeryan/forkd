@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { MapPin, Plus, Star } from 'lucide-react'
 import AddPlaceFab from '@/components/AddPlaceFab'
 
@@ -16,7 +17,7 @@ export default async function PlacesPage() {
     <div className="max-w-lg mx-auto px-4 pt-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">My Places</h1>
-        <Link href="/add" className="bg-orange-500 text-white rounded-full p-2 shadow">
+        <Link href="/places?add=true" className="bg-orange-500 text-white rounded-full p-2 shadow">
           <Plus className="w-5 h-5" />
         </Link>
       </div>
@@ -52,7 +53,9 @@ export default async function PlacesPage() {
         </div>
       )}
 
-      <AddPlaceFab />
+      <Suspense fallback={null}>
+        <AddPlaceFab />
+      </Suspense>
     </div>
   )
 }
