@@ -17,7 +17,8 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const userId = session.user.id
-  const { googlePlaceId, name, address, city, state, lat, lng, placeType, notes } = await req.json()
+  const { googlePlaceId, name, address, city, state, lat, lng, placeType, notes, rating, skipVisit, visitedAt } =
+    await req.json()
   if (!name) return NextResponse.json({ error: 'Name required' }, { status: 400 })
 
   // If this place was picked from Google, dedupe on googlePlaceId so the same
@@ -41,8 +42,23 @@ export async function POST(req: Request) {
     })
   }
 
+  // The common flow is "I just ate here, let me log it", so a place is added
+  // with its first visit already recorded (defaulting to today). Callers can
+  // opt out with skipVisit (e.g. backfilling a place visited long ago).
+  const firstVisit = skipVisit ? null : new Date(visitedAt ?? Date.now())
   const userPlace = await prisma.userPlace.create({
-    data: { userId, placeId: place.id, notes, status: 'visited' },
+    data: {
+      userId,
+      placeId: place.id,
+      notes,
+      status: 'visited',
+      ...(rating != null && { rating }),
+      ...(firstVisit && {
+        visitCount: 1,
+        lastVisited: firstVisit,
+        visits: { create: { visitedAt: firstVisit, ...(rating != null && { rating }) } },
+      }),
+    },
   })
   return NextResponse.json({ userPlaceId: userPlace.id }, { status: 201 })
 }
