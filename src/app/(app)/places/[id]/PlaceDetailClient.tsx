@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StarRating from '@/components/StarRating'
-import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp } from 'lucide-react'
+import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2 } from 'lucide-react'
 
 export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const router = useRouter()
@@ -20,6 +20,22 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const [visitNotes, setVisitNotes] = useState('')
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function removePlace() {
+    setDeleting(true)
+    const res = await fetch(`/api/places/${userPlace.id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      setDeleting(false)
+      setConfirmDelete(false)
+      alert('Could not remove this place. Please try again.')
+      return
+    }
+    router.push('/places')
+    router.refresh()
+  }
 
   async function saveRating(newRating: number) {
     setRating(newRating)
@@ -78,14 +94,38 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{place.name}</h1>
-        {place.city && (
-          <div className="flex items-center gap-1 text-gray-400 mt-1 text-sm">
-            <MapPin className="w-4 h-4" />
-            <span>{place.city}{place.state ? `, ${place.state}` : ''}</span>
-          </div>
-        )}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-gray-900">{place.name}</h1>
+          {place.city && (
+            <div className="flex items-center gap-1 text-gray-400 mt-1 text-sm">
+              <MapPin className="w-4 h-4" />
+              <span>{place.city}{place.state ? `, ${place.state}` : ''}</span>
+            </div>
+          )}
+        </div>
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            aria-label="Place options"
+            className="text-gray-400 p-2 -mr-2 rounded-full active:bg-gray-100"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </button>
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 top-full z-20 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1">
+                <button
+                  onClick={() => { setMenuOpen(false); setConfirmDelete(true) }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 active:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" /> Remove Place
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Rating card */}
@@ -207,6 +247,36 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
           </div>
         )}
       </div>
+
+      {/* Remove-place confirmation */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          <div className="absolute inset-0 bg-black/40" onClick={() => !deleting && setConfirmDelete(false)} />
+          <div className="relative w-full max-w-sm bg-white rounded-2xl p-5 shadow-xl">
+            <h3 className="font-bold text-gray-900 text-lg">Remove this place?</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Your meals, visits, and photos for {place.name} will also be deleted. This can&apos;t be undone.
+            </p>
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                className="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={removePlace}
+                disabled={deleting}
+                className="flex-1 bg-red-500 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {deleting ? 'Removing…' : 'Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
