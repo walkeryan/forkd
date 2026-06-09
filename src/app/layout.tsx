@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { SessionProvider } from 'next-auth/react'
+import { Toaster } from 'react-hot-toast'
 import { auth } from '@/auth'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -27,6 +28,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={inter.className}>
         <SessionProvider session={session}>
           {children}
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: { borderRadius: '12px', fontSize: '14px' },
+              success: { iconTheme: { primary: '#f97316', secondary: '#fff' } },
+            }}
+          />
         </SessionProvider>
       </body>
     </html>

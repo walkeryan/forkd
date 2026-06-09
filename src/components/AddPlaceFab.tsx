@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import toast from 'react-hot-toast'
 import { Plus } from 'lucide-react'
 import AddPlaceModal from '@/components/AddPlaceModal'
 
@@ -20,6 +21,7 @@ export default function AddPlaceFab() {
 
   function handleSuccess(id: string, mode: 'visited' | 'wishlist') {
     setOpen(false)
+    toast.success(mode === 'wishlist' ? 'Added to wishlist' : 'Place added')
     router.refresh()
     // Visited places open their detail page; wishlist items go to the list.
     router.push(mode === 'wishlist' ? '/wishlist' : `/places/${id}`)

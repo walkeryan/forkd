@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import { MapPin, Check, Trash2, Loader2 } from 'lucide-react'
 
 export interface WishlistEntry {
@@ -24,9 +25,11 @@ export default function WishlistClient({ items }: { items: WishlistEntry[] }) {
     })
     if (!res.ok) {
       setBusyId(null)
+      toast.error('Could not mark as visited. Please try again.')
       return
     }
     const data = await res.json()
+    toast.success('Moved to your places')
     router.push(`/places/${data.userPlaceId}`)
     router.refresh()
   }
@@ -36,8 +39,10 @@ export default function WishlistClient({ items }: { items: WishlistEntry[] }) {
     const res = await fetch(`/api/wishlist/${id}`, { method: 'DELETE' })
     if (!res.ok) {
       setBusyId(null)
+      toast.error('Could not remove. Please try again.')
       return
     }
+    toast.success('Removed from wishlist')
     router.refresh()
   }
 

@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import StarRating from '@/components/StarRating'
 import PhotoLightbox from '@/components/PhotoLightbox'
 import { cuisineChip } from '@/lib/places'
@@ -35,6 +36,21 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null)
   const [editVisit, setEditVisit] = useState<{ visitedAt: string; notes: string; rating: number | null }>({ visitedAt: '', notes: '', rating: null })
 
+  // Centralized fetch + feedback: surfaces a toast on failure (and optionally
+  // on success) and refreshes server data when the mutation lands.
+  async function mutate(fn: () => Promise<Response>, okMsg?: string): Promise<boolean> {
+    try {
+      const res = await fn()
+      if (!res.ok) throw new Error()
+      if (okMsg) toast.success(okMsg)
+      router.refresh()
+      return true
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+      return false
+    }
+  }
+
   function startEditMeal(meal: any) {
     setEditingMealId(meal.id)
     setEditMeal({ name: meal.name, description: meal.description ?? '', isFavorite: meal.isFavorite, rating: meal.rating ?? null })
@@ -42,19 +58,17 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
 
   async function saveMealEdit(id: string) {
     if (!editMeal.name.trim()) return
-    await fetch(`/api/meals/${id}`, {
+    const ok = await mutate(() => fetch(`/api/meals/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: editMeal.name.trim(), description: editMeal.description, isFavorite: editMeal.isFavorite, rating: editMeal.rating }),
-    })
-    setEditingMealId(null)
-    router.refresh()
+    }), 'Meal updated')
+    if (ok) setEditingMealId(null)
   }
 
   async function deleteMeal(id: string) {
-    await fetch(`/api/meals/${id}`, { method: 'DELETE' })
-    if (editingMealId === id) setEditingMealId(null)
-    router.refresh()
+    const ok = await mutate(() => fetch(`/api/meals/${id}`, { method: 'DELETE' }), 'Meal deleted')
+    if (ok && editingMealId === id) setEditingMealId(null)
   }
 
   function startEditVisit(v: any) {
@@ -63,74 +77,70 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
   }
 
   async function saveVisitEdit(id: string) {
-    await fetch(`/api/visits/${id}`, {
+    const ok = await mutate(() => fetch(`/api/visits/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ visitedAt: editVisit.visitedAt, notes: editVisit.notes, rating: editVisit.rating }),
-    })
-    setEditingVisitId(null)
-    router.refresh()
+    }), 'Visit updated')
+    if (ok) setEditingVisitId(null)
   }
 
   async function deleteVisit(id: string) {
-    await fetch(`/api/visits/${id}`, { method: 'DELETE' })
-    if (editingVisitId === id) setEditingVisitId(null)
-    router.refresh()
+    const ok = await mutate(() => fetch(`/api/visits/${id}`, { method: 'DELETE' }), 'Visit deleted')
+    if (ok && editingVisitId === id) setEditingVisitId(null)
   }
 
   async function removePlace() {
     setDeleting(true)
-    const res = await fetch(`/api/places/${userPlace.id}`, { method: 'DELETE' })
-    if (!res.ok) {
+    try {
+      const res = await fetch(`/api/places/${userPlace.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      toast.success('Place removed')
+      router.push('/places')
+      router.refresh()
+    } catch {
       setDeleting(false)
       setConfirmDelete(false)
-      alert('Could not remove this place. Please try again.')
-      return
+      toast.error('Could not remove this place. Please try again.')
     }
-    router.push('/places')
-    router.refresh()
   }
 
   async function saveRating(newRating: number) {
     setRating(newRating)
-    await fetch(`/api/places/${userPlace.id}`, {
+    await mutate(() => fetch(`/api/places/${userPlace.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rating: newRating }),
-    })
-    router.refresh()
+    }))
   }
 
   async function saveDetails() {
     setSaving(true)
-    await fetch(`/api/places/${userPlace.id}`, {
+    await mutate(() => fetch(`/api/places/${userPlace.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notes, priceRange }),
-    })
+    }), 'Notes saved')
     setSaving(false)
-    router.refresh()
   }
 
   async function addMeal() {
     if (!mealName.trim()) return
-    await fetch('/api/meals', {
+    const ok = await mutate(() => fetch('/api/meals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userPlaceId: userPlace.id, name: mealName, description: mealNotes, isFavorite: mealFav, rating: mealRating }),
-    })
-    setMealName(''); setMealNotes(''); setMealFav(false); setMealRating(null); setShowMealForm(false)
-    router.refresh()
+    }), 'Meal added')
+    if (ok) { setMealName(''); setMealNotes(''); setMealFav(false); setMealRating(null); setShowMealForm(false) }
   }
 
   async function logVisit() {
-    await fetch('/api/visits', {
+    const ok = await mutate(() => fetch('/api/visits', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userPlaceId: userPlace.id, notes: visitNotes, visitedAt: visitDate, rating: visitRating }),
-    })
-    setVisitNotes(''); setVisitRating(null); setShowVisitForm(false)
-    router.refresh()
+    }), 'Visit logged')
+    if (ok) { setVisitNotes(''); setVisitRating(null); setShowVisitForm(false) }
   }
 
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -140,15 +150,14 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
     const form = new FormData()
     form.append('file', file)
     form.append('userPlaceId', userPlace.id)
-    await fetch('/api/photos', { method: 'POST', body: form })
+    await mutate(() => fetch('/api/photos', { method: 'POST', body: form }), 'Photo added')
     setUploadingPhoto(false)
-    router.refresh()
+    e.target.value = ''
   }
 
   async function deletePhoto(id: string) {
     if (!confirm('Delete this photo?')) return
-    await fetch(`/api/photos/${id}`, { method: 'DELETE' })
-    router.refresh()
+    await mutate(() => fetch(`/api/photos/${id}`, { method: 'DELETE' }), 'Photo deleted')
   }
 
   const [tagInput, setTagInput] = useState('')
@@ -156,17 +165,15 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
     const trimmed = name.trim()
     if (!trimmed) return
     setTagInput('')
-    await fetch(`/api/places/${userPlace.id}/tags`, {
+    await mutate(() => fetch(`/api/places/${userPlace.id}/tags`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: trimmed }),
-    })
-    router.refresh()
+    }))
   }
 
   async function removeTag(tagId: string) {
-    await fetch(`/api/places/${userPlace.id}/tags/${tagId}`, { method: 'DELETE' })
-    router.refresh()
+    await mutate(() => fetch(`/api/places/${userPlace.id}/tags/${tagId}`, { method: 'DELETE' }))
   }
 
   // Suggest the user's other tags not already on this place.
