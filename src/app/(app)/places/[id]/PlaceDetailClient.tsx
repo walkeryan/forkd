@@ -1,14 +1,14 @@
 'use client'
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import StarRating from '@/components/StarRating'
 import PhotoLightbox from '@/components/PhotoLightbox'
 import { cuisineChip } from '@/lib/places'
+import type { UserPlaceWithRelations, MealWithRelations, VisitWithRelations, PlaceTagWithTag } from '@/types/models'
 import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft, Tag as TagIcon } from 'lucide-react'
 
-export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPlace: any; allTags?: { id: string; name: string }[] }) {
+export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPlace: UserPlaceWithRelations; allTags?: { id: string; name: string }[] }) {
   const router = useRouter()
   const { place, meals, visits, photos, tags } = userPlace
   const [rating, setRating] = useState<number | null>(userPlace.rating)
@@ -51,7 +51,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
     }
   }
 
-  function startEditMeal(meal: any) {
+  function startEditMeal(meal: MealWithRelations) {
     setEditingMealId(meal.id)
     setEditMeal({ name: meal.name, description: meal.description ?? '', isFavorite: meal.isFavorite, rating: meal.rating ?? null })
   }
@@ -71,7 +71,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
     if (ok && editingMealId === id) setEditingMealId(null)
   }
 
-  function startEditVisit(v: any) {
+  function startEditVisit(v: VisitWithRelations) {
     setEditingVisitId(v.id)
     setEditVisit({ visitedAt: new Date(v.visitedAt).toISOString().split('T')[0], notes: v.notes ?? '', rating: v.rating ?? null })
   }
@@ -177,7 +177,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
   }
 
   // Suggest the user's other tags not already on this place.
-  const attachedIds = new Set(tags.map((t: any) => t.tag.id))
+  const attachedIds = new Set(tags.map((t: PlaceTagWithTag) => t.tag.id))
   const suggestions = allTags.filter((t) => !attachedIds.has(t.id))
 
   return (
@@ -261,7 +261,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
         </div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
-            {tags.map((t: any) => (
+            {tags.map((t: PlaceTagWithTag) => (
               <span key={t.tag.id} className="flex items-center gap-1 bg-orange-50 text-orange-600 rounded-full pl-3 pr-1.5 py-1 text-xs font-medium">
                 {t.tag.name}
                 <button onClick={() => removeTag(t.tag.id)} aria-label={`Remove ${t.tag.name}`} className="hover:bg-orange-100 rounded-full p-0.5">
@@ -320,7 +320,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
           <p className="text-sm text-gray-400">No meals added yet — tap + to add one</p>
         ) : (
           <div className="space-y-2">
-            {meals.map((meal: any) => (
+            {meals.map((meal: MealWithRelations) => (
               editingMealId === meal.id ? (
                 <div key={meal.id} className="space-y-2 bg-orange-50 rounded-xl p-3">
                   <input value={editMeal.name} onChange={e => setEditMeal(m => ({ ...m, name: e.target.value }))} placeholder="Meal name *"
@@ -393,7 +393,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
           <p className="text-sm text-gray-400">No visits logged — tap + to log one</p>
         ) : (
           <div className="space-y-2">
-            {visits.map((v: any) => (
+            {visits.map((v: VisitWithRelations) => (
               editingVisitId === v.id ? (
                 <div key={v.id} className="space-y-2 bg-orange-50 rounded-xl p-3">
                   <input type="date" value={editVisit.visitedAt} onChange={e => setEditVisit(s => ({ ...s, visitedAt: e.target.value }))}
@@ -449,7 +449,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
           <p className="text-sm text-gray-400">No photos yet — tap + to add one</p>
         ) : (
           <div className="grid grid-cols-3 gap-1.5">
-            {photos.map((photo: any, i: number) => (
+            {photos.map((photo, i) => (
               <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
                 <button type="button" onClick={() => setLightboxIndex(i)} className="block w-full h-full" aria-label="View photo">
                   <img src={`/api/photos/${photo.id}`} alt={photo.caption ?? ''} className="w-full h-full object-cover" />
