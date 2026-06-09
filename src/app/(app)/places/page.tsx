@@ -9,7 +9,7 @@ export default async function PlacesPage() {
   const session = await auth()
   const userPlaces = await prisma.userPlace.findMany({
     where: { userId: session!.user!.id, status: 'visited' },
-    include: { place: true },
+    include: { place: true, _count: { select: { visits: true } } },
     orderBy: { updatedAt: 'desc' },
   })
 
@@ -30,7 +30,7 @@ export default async function PlacesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {userPlaces.map(({ id, place, rating, priceRange, visitCount }) => (
+          {userPlaces.map(({ id, place, rating, priceRange, _count }) => (
             <Link key={id} href={`/places/${id}`} className="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-start justify-between">
                 <div>
@@ -45,7 +45,7 @@ export default async function PlacesPage() {
                 )}
               </div>
               <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                {visitCount > 0 && <span>{visitCount} visit{visitCount !== 1 ? 's' : ''}</span>}
+                {_count.visits > 0 && <span>{_count.visits} visit{_count.visits !== 1 ? 's' : ''}</span>}
                 {priceRange && <span>{'$'.repeat(priceRange)}</span>}
               </div>
             </Link>

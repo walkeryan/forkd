@@ -266,7 +266,7 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 font-medium text-gray-700">
             <Calendar className="w-4 h-4" />
-            <span>Visits ({userPlace.visitCount})</span>
+            <span>Visits ({visits.length})</span>
           </div>
           <button onClick={() => setShowVisitForm(v => !v)} className="text-orange-500">
             {showVisitForm ? <ChevronUp className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
