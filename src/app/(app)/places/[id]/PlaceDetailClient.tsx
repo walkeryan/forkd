@@ -17,8 +17,10 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const [mealName, setMealName] = useState('')
   const [mealNotes, setMealNotes] = useState('')
   const [mealFav, setMealFav] = useState(false)
+  const [mealRating, setMealRating] = useState<number | null>(null)
   const [visitNotes, setVisitNotes] = useState('')
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0])
+  const [visitRating, setVisitRating] = useState<number | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -26,13 +28,13 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
 
   // Inline edit state for meals + visits (P0.5).
   const [editingMealId, setEditingMealId] = useState<string | null>(null)
-  const [editMeal, setEditMeal] = useState({ name: '', description: '', isFavorite: false })
+  const [editMeal, setEditMeal] = useState<{ name: string; description: string; isFavorite: boolean; rating: number | null }>({ name: '', description: '', isFavorite: false, rating: null })
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null)
-  const [editVisit, setEditVisit] = useState({ visitedAt: '', notes: '' })
+  const [editVisit, setEditVisit] = useState<{ visitedAt: string; notes: string; rating: number | null }>({ visitedAt: '', notes: '', rating: null })
 
   function startEditMeal(meal: any) {
     setEditingMealId(meal.id)
-    setEditMeal({ name: meal.name, description: meal.description ?? '', isFavorite: meal.isFavorite })
+    setEditMeal({ name: meal.name, description: meal.description ?? '', isFavorite: meal.isFavorite, rating: meal.rating ?? null })
   }
 
   async function saveMealEdit(id: string) {
@@ -40,7 +42,7 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
     await fetch(`/api/meals/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: editMeal.name.trim(), description: editMeal.description, isFavorite: editMeal.isFavorite }),
+      body: JSON.stringify({ name: editMeal.name.trim(), description: editMeal.description, isFavorite: editMeal.isFavorite, rating: editMeal.rating }),
     })
     setEditingMealId(null)
     router.refresh()
@@ -54,14 +56,14 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
 
   function startEditVisit(v: any) {
     setEditingVisitId(v.id)
-    setEditVisit({ visitedAt: new Date(v.visitedAt).toISOString().split('T')[0], notes: v.notes ?? '' })
+    setEditVisit({ visitedAt: new Date(v.visitedAt).toISOString().split('T')[0], notes: v.notes ?? '', rating: v.rating ?? null })
   }
 
   async function saveVisitEdit(id: string) {
     await fetch(`/api/visits/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visitedAt: editVisit.visitedAt, notes: editVisit.notes }),
+      body: JSON.stringify({ visitedAt: editVisit.visitedAt, notes: editVisit.notes, rating: editVisit.rating }),
     })
     setEditingVisitId(null)
     router.refresh()
@@ -112,9 +114,9 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
     await fetch('/api/meals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userPlaceId: userPlace.id, name: mealName, description: mealNotes, isFavorite: mealFav }),
+      body: JSON.stringify({ userPlaceId: userPlace.id, name: mealName, description: mealNotes, isFavorite: mealFav, rating: mealRating }),
     })
-    setMealName(''); setMealNotes(''); setMealFav(false); setShowMealForm(false)
+    setMealName(''); setMealNotes(''); setMealFav(false); setMealRating(null); setShowMealForm(false)
     router.refresh()
   }
 
@@ -122,9 +124,9 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
     await fetch('/api/visits', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userPlaceId: userPlace.id, notes: visitNotes, visitedAt: visitDate }),
+      body: JSON.stringify({ userPlaceId: userPlace.id, notes: visitNotes, visitedAt: visitDate, rating: visitRating }),
     })
-    setVisitNotes(''); setShowVisitForm(false)
+    setVisitNotes(''); setVisitRating(null); setShowVisitForm(false)
     router.refresh()
   }
 
@@ -214,6 +216,10 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
             <input value={mealNotes} onChange={e => setMealNotes(e.target.value)} placeholder="Description (optional)"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Rating</span>
+              <StarRating value={mealRating} onChange={setMealRating} size="sm" />
+            </div>
             <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
               <input type="checkbox" checked={mealFav} onChange={e => setMealFav(e.target.checked)} className="accent-orange-500" />
               Mark as favorite
@@ -232,6 +238,10 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
                   <input value={editMeal.description} onChange={e => setEditMeal(m => ({ ...m, description: e.target.value }))} placeholder="Description (optional)"
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Rating</span>
+                    <StarRating value={editMeal.rating} onChange={r => setEditMeal(m => ({ ...m, rating: r }))} size="sm" />
+                  </div>
                   <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                     <input type="checkbox" checked={editMeal.isFavorite} onChange={e => setEditMeal(m => ({ ...m, isFavorite: e.target.checked }))} className="accent-orange-500" />
                     Mark as favorite
@@ -247,6 +257,11 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-medium text-gray-800">{meal.name}</p>
                       {meal.isFavorite && <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400 flex-shrink-0" />}
+                      {meal.rating != null && (
+                        <span className="flex items-center gap-0.5 text-xs text-orange-500 font-medium">
+                          <Star className="w-3 h-3 fill-orange-500" />{meal.rating.toFixed(1)}
+                        </span>
+                      )}
                     </div>
                     {meal.description && <p className="text-xs text-gray-400">{meal.description}</p>}
                   </div>
@@ -276,6 +291,10 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
           <div className="mb-3 space-y-2 bg-orange-50 rounded-xl p-3">
             <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Rating</span>
+              <StarRating value={visitRating} onChange={setVisitRating} size="sm" />
+            </div>
             <textarea value={visitNotes} onChange={e => setVisitNotes(e.target.value)} placeholder="How was it? (optional)"
               rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
             <button onClick={logVisit} className="w-full bg-orange-500 text-white rounded-lg py-2 text-sm font-medium">Log Visit</button>
@@ -290,6 +309,10 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
                 <div key={v.id} className="space-y-2 bg-orange-50 rounded-xl p-3">
                   <input type="date" value={editVisit.visitedAt} onChange={e => setEditVisit(s => ({ ...s, visitedAt: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Rating</span>
+                    <StarRating value={editVisit.rating} onChange={r => setEditVisit(s => ({ ...s, rating: r }))} size="sm" />
+                  </div>
                   <textarea value={editVisit.notes} onChange={e => setEditVisit(s => ({ ...s, notes: e.target.value }))} placeholder="How was it? (optional)" rows={2}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
                   <div className="flex gap-2">
@@ -300,7 +323,14 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
               ) : (
                 <div key={v.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0 text-sm">
-                    <p className="text-gray-700 font-medium">{new Date(v.visitedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-gray-700 font-medium">{new Date(v.visitedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      {v.rating != null && (
+                        <span className="flex items-center gap-0.5 text-xs text-orange-500 font-medium">
+                          <Star className="w-3 h-3 fill-orange-500" />{v.rating.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
                     {v.notes && <p className="text-gray-400 text-xs">{v.notes}</p>}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
