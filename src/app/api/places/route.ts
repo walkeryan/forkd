@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     }
   } else {
     place = await prisma.place.create({
-      data: { name, address, city, state, lat, lng, googlePlaceId: googlePlaceId || undefined },
+      data: { name, address, city, state, lat, lng, cuisine: placeType || undefined, googlePlaceId: googlePlaceId || undefined },
     })
   }
 

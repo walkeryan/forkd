@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StarRating from '@/components/StarRating'
 import PhotoLightbox from '@/components/PhotoLightbox'
+import { cuisineChip } from '@/lib/places'
 import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft, Tag as TagIcon } from 'lucide-react'
 
 export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPlace: any; allTags?: { id: string; name: string }[] }) {
@@ -192,6 +193,14 @@ export default function PlaceDetailClient({ userPlace, allTags = [] }: { userPla
               <span>{place.city}{place.state ? `, ${place.state}` : ''}</span>
             </div>
           )}
+          {(() => {
+            const chip = cuisineChip(place.cuisine)
+            return chip ? (
+              <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs mt-2">
+                <span>{chip.emoji}</span>{chip.label}
+              </span>
+            ) : null
+          })()}
         </div>
         <div className="relative flex-shrink-0">
           <button

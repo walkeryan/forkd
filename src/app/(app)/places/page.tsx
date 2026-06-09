@@ -6,6 +6,7 @@ import { Suspense } from 'react'
 import { MapPin, Plus, Star, SearchX } from 'lucide-react'
 import AddPlaceFab from '@/components/AddPlaceFab'
 import PlacesFilters, { type SortKey } from './PlacesFilters'
+import { cuisineChip } from '@/lib/places'
 
 const SORT_ORDER: Record<SortKey, Prisma.UserPlaceOrderByWithRelationInput> = {
   recent: { updatedAt: 'desc' },
@@ -83,7 +84,15 @@ export default async function PlacesPage({
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+              <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                {(() => {
+                  const chip = cuisineChip(place.cuisine)
+                  return chip ? (
+                    <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">
+                      <span>{chip.emoji}</span>{chip.label}
+                    </span>
+                  ) : null
+                })()}
                 {_count.visits > 0 && <span>{_count.visits} visit{_count.visits !== 1 ? 's' : ''}</span>}
                 {priceRange && <span>{'$'.repeat(priceRange)}</span>}
               </div>

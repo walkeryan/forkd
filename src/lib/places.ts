@@ -28,6 +28,45 @@ export interface GooglePlace {
   business_status?: string
 }
 
+// Map a Google place type (e.g. "ramen_restaurant") to a food emoji. The first
+// keyword that matches wins, so order specific terms before generic ones.
+const CUISINE_EMOJI: [string, string][] = [
+  ['ramen', '🍜'], ['noodle', '🍜'], ['pho', '🍜'], ['vietnamese', '🍜'],
+  ['sushi', '🍣'], ['japanese', '🍣'], ['seafood', '🦞'], ['fish', '🐟'],
+  ['pizza', '🍕'], ['italian', '🍝'],
+  ['burger', '🍔'], ['hamburger', '🍔'], ['fast_food', '🍔'], ['american', '🍔'],
+  ['taco', '🌮'], ['mexican', '🌮'],
+  ['chinese', '🥡'], ['dumpling', '🥟'],
+  ['thai', '🍛'], ['indian', '🍛'], ['curry', '🍛'],
+  ['korean', '🍲'], ['hot_pot', '🍲'], ['soup', '🍲'],
+  ['steak', '🥩'], ['barbecue', '🍖'], ['bbq', '🍖'], ['meat', '🥩'],
+  ['breakfast', '🍳'], ['brunch', '🍳'],
+  ['bakery', '🥐'], ['sandwich', '🥪'], ['deli', '🥪'],
+  ['coffee', '☕'], ['cafe', '☕'], ['café', '☕'], ['tea', '🍵'],
+  ['ice_cream', '🍦'], ['dessert', '🍰'], ['donut', '🍩'],
+  ['bar', '🍸'], ['pub', '🍺'], ['brewery', '🍺'], ['wine', '🍷'],
+  ['vegetarian', '🥗'], ['vegan', '🥗'], ['salad', '🥗'],
+  ['chicken', '🍗'], ['french', '🥖'],
+  ['restaurant', '🍽️'], ['food', '🍽️'], ['meal', '🍽️'],
+]
+
+export interface CuisineChip {
+  emoji: string
+  label: string
+}
+
+export function cuisineChip(cuisine: string | null | undefined): CuisineChip | null {
+  if (!cuisine) return null
+  const key = cuisine.toLowerCase()
+  const match = CUISINE_EMOJI.find(([term]) => key.includes(term))
+  const label = cuisine
+    .replace(/_/g, ' ')
+    .replace(/\brestaurant\b/i, '')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+  return { emoji: match?.[1] ?? '🍽️', label: label || 'Restaurant' }
+}
+
 export function normalizeGooglePlace(result: GooglePlace): NearbyPlace {
   return {
     googlePlaceId: result.place_id,

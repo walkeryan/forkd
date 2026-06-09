@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const userId = session.user.id
-  const { googlePlaceId, name, address, city, state, lat, lng, notes } = await req.json()
+  const { googlePlaceId, name, address, city, state, lat, lng, placeType, notes } = await req.json()
   if (!name) return NextResponse.json({ error: 'Name required' }, { status: 400 })
 
   let place = googlePlaceId
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     }
   } else {
     place = await prisma.place.create({
-      data: { name, address, city, state, lat, lng, googlePlaceId: googlePlaceId || undefined },
+      data: { name, address, city, state, lat, lng, cuisine: placeType || undefined, googlePlaceId: googlePlaceId || undefined },
     })
   }
 
