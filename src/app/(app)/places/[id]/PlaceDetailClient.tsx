@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StarRating from '@/components/StarRating'
-import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2 } from 'lucide-react'
+import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check } from 'lucide-react'
 
 export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const router = useRouter()
@@ -23,6 +23,55 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  // Inline edit state for meals + visits (P0.5).
+  const [editingMealId, setEditingMealId] = useState<string | null>(null)
+  const [editMeal, setEditMeal] = useState({ name: '', description: '', isFavorite: false })
+  const [editingVisitId, setEditingVisitId] = useState<string | null>(null)
+  const [editVisit, setEditVisit] = useState({ visitedAt: '', notes: '' })
+
+  function startEditMeal(meal: any) {
+    setEditingMealId(meal.id)
+    setEditMeal({ name: meal.name, description: meal.description ?? '', isFavorite: meal.isFavorite })
+  }
+
+  async function saveMealEdit(id: string) {
+    if (!editMeal.name.trim()) return
+    await fetch(`/api/meals/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: editMeal.name.trim(), description: editMeal.description, isFavorite: editMeal.isFavorite }),
+    })
+    setEditingMealId(null)
+    router.refresh()
+  }
+
+  async function deleteMeal(id: string) {
+    await fetch(`/api/meals/${id}`, { method: 'DELETE' })
+    if (editingMealId === id) setEditingMealId(null)
+    router.refresh()
+  }
+
+  function startEditVisit(v: any) {
+    setEditingVisitId(v.id)
+    setEditVisit({ visitedAt: new Date(v.visitedAt).toISOString().split('T')[0], notes: v.notes ?? '' })
+  }
+
+  async function saveVisitEdit(id: string) {
+    await fetch(`/api/visits/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitedAt: editVisit.visitedAt, notes: editVisit.notes }),
+    })
+    setEditingVisitId(null)
+    router.refresh()
+  }
+
+  async function deleteVisit(id: string) {
+    await fetch(`/api/visits/${id}`, { method: 'DELETE' })
+    if (editingVisitId === id) setEditingVisitId(null)
+    router.refresh()
+  }
 
   async function removePlace() {
     setDeleting(true)
@@ -177,13 +226,36 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
         ) : (
           <div className="space-y-2">
             {meals.map((meal: any) => (
-              <div key={meal.id} className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{meal.name}</p>
-                  {meal.description && <p className="text-xs text-gray-400">{meal.description}</p>}
+              editingMealId === meal.id ? (
+                <div key={meal.id} className="space-y-2 bg-orange-50 rounded-xl p-3">
+                  <input value={editMeal.name} onChange={e => setEditMeal(m => ({ ...m, name: e.target.value }))} placeholder="Meal name *"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <input value={editMeal.description} onChange={e => setEditMeal(m => ({ ...m, description: e.target.value }))} placeholder="Description (optional)"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input type="checkbox" checked={editMeal.isFavorite} onChange={e => setEditMeal(m => ({ ...m, isFavorite: e.target.checked }))} className="accent-orange-500" />
+                    Mark as favorite
+                  </label>
+                  <div className="flex gap-2">
+                    <button onClick={() => setEditingMealId(null)} className="flex-1 border border-gray-200 text-gray-500 rounded-lg py-2 text-sm font-medium">Cancel</button>
+                    <button onClick={() => saveMealEdit(meal.id)} className="flex-1 bg-orange-500 text-white rounded-lg py-2 text-sm font-medium flex items-center justify-center gap-1"><Check className="w-4 h-4" /> Save</button>
+                  </div>
                 </div>
-                {meal.isFavorite && <Star className="w-4 h-4 fill-orange-400 text-orange-400 flex-shrink-0 mt-0.5" />}
-              </div>
+              ) : (
+                <div key={meal.id} className="flex items-start justify-between gap-2 group">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-gray-800">{meal.name}</p>
+                      {meal.isFavorite && <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400 flex-shrink-0" />}
+                    </div>
+                    {meal.description && <p className="text-xs text-gray-400">{meal.description}</p>}
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => startEditMeal(meal)} aria-label="Edit meal" className="text-gray-300 hover:text-gray-500 p-1"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => deleteMeal(meal.id)} aria-label="Delete meal" className="text-gray-300 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              )
             ))}
           </div>
         )}
@@ -213,11 +285,30 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
           <p className="text-sm text-gray-400">No visits logged — tap + to log one</p>
         ) : (
           <div className="space-y-2">
-            {visits.slice(0, 5).map((v: any) => (
-              <div key={v.id} className="text-sm">
-                <p className="text-gray-700 font-medium">{new Date(v.visitedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                {v.notes && <p className="text-gray-400 text-xs">{v.notes}</p>}
-              </div>
+            {visits.map((v: any) => (
+              editingVisitId === v.id ? (
+                <div key={v.id} className="space-y-2 bg-orange-50 rounded-xl p-3">
+                  <input type="date" value={editVisit.visitedAt} onChange={e => setEditVisit(s => ({ ...s, visitedAt: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <textarea value={editVisit.notes} onChange={e => setEditVisit(s => ({ ...s, notes: e.target.value }))} placeholder="How was it? (optional)" rows={2}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <div className="flex gap-2">
+                    <button onClick={() => setEditingVisitId(null)} className="flex-1 border border-gray-200 text-gray-500 rounded-lg py-2 text-sm font-medium">Cancel</button>
+                    <button onClick={() => saveVisitEdit(v.id)} className="flex-1 bg-orange-500 text-white rounded-lg py-2 text-sm font-medium flex items-center justify-center gap-1"><Check className="w-4 h-4" /> Save</button>
+                  </div>
+                </div>
+              ) : (
+                <div key={v.id} className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 text-sm">
+                    <p className="text-gray-700 font-medium">{new Date(v.visitedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    {v.notes && <p className="text-gray-400 text-xs">{v.notes}</p>}
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => startEditVisit(v)} aria-label="Edit visit" className="text-gray-300 hover:text-gray-500 p-1"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => deleteVisit(v.id)} aria-label="Delete visit" className="text-gray-300 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              )
             ))}
           </div>
         )}
