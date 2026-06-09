@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MapPin, Search, X, Loader2, LocateFixed, PenLine, Check, Bookmark } from 'lucide-react'
+import { cuisineChip } from '@/lib/places'
 
 type AddMode = 'visited' | 'wishlist'
 
@@ -18,6 +19,19 @@ interface Coords {
   lng: number
 }
 
+// Great-circle distance between two points in miles (Haversine formula).
+function haversineMiles(a: Coords, b: Coords): number {
+  const R = 3958.8 // Earth radius in miles
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const dLat = toRad(b.lat - a.lat)
+  const dLng = toRad(b.lng - a.lng)
+  const lat1 = toRad(a.lat)
+  const lat2 = toRad(b.lat)
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(h))
+}
+
 export default function AddPlaceModal({
   open,
   onClose,
@@ -33,28 +47,12 @@ export default function AddPlaceModal({
   const [loadingNearby, setLoadingNearby] = useState(false)
   const [results, setResults] = useState<PlaceResult[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [canRetryLocation, setCanRetryLocation] = useState(false)
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [creatingId, setCreatingId] = useState<string | null>(null)
   const [manualOpen, setManualOpen] = useState(false)
   const [manual, setManual] = useState({ name: '', address: '' })
-
-  // Reset state whenever the modal is reopened.
-  useEffect(() => {
-    if (open) {
-      setMode('visited')
-      setCoords(null)
-      setLocating(false)
-      setLoadingNearby(false)
-      setResults([])
-      setError(null)
-      setQuery('')
-      setSearching(false)
-      setCreatingId(null)
-      setManualOpen(false)
-      setManual({ name: '', address: '' })
-    }
-  }, [open])
 
   const fetchNearby = useCallback(async (c: Coords) => {
     setLoadingNearby(true)
@@ -67,7 +65,7 @@ export default function AddPlaceModal({
         setResults([])
       } else {
         setResults(data.results)
-        if (data.results.length === 0) setError('No places found nearby — try a search instead.')
+        if (data.results.length === 0) setError('No restaurants found nearby — try a search instead.')
       }
     } catch {
       setError('Places search unavailable')
@@ -76,10 +74,12 @@ export default function AddPlaceModal({
     }
   }, [])
 
-  function useMyLocation() {
+  // Ask for the user's location and, on success, load nearby restaurants.
+  const requestLocation = useCallback(() => {
     setError(null)
+    setCanRetryLocation(false)
     if (!('geolocation' in navigator)) {
-      setError('Geolocation is not supported on this device.')
+      setError('Location unavailable — search for a restaurant below.')
       return
     }
     setLocating(true)
@@ -92,15 +92,35 @@ export default function AddPlaceModal({
       },
       (err) => {
         setLocating(false)
+        setCanRetryLocation(true)
         setError(
           err.code === err.PERMISSION_DENIED
-            ? 'Location permission denied. You can search by name instead.'
-            : 'Could not get your location. You can search by name instead.',
+            ? 'Location access denied — search for a restaurant below.'
+            : 'Couldn’t find your location — search for a restaurant below.',
         )
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      // Fall back to the search bar if location takes longer than 8 seconds.
+      { enableHighAccuracy: true, timeout: 8000 },
     )
-  }
+  }, [fetchNearby])
+
+  // Reset state and auto-request location whenever the modal is reopened.
+  useEffect(() => {
+    if (!open) return
+    setMode('visited')
+    setCoords(null)
+    setLocating(false)
+    setLoadingNearby(false)
+    setResults([])
+    setError(null)
+    setCanRetryLocation(false)
+    setQuery('')
+    setSearching(false)
+    setCreatingId(null)
+    setManualOpen(false)
+    setManual({ name: '', address: '' })
+    requestLocation()
+  }, [open, requestLocation])
 
   // Debounced text search.
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -184,6 +204,19 @@ export default function AddPlaceModal({
 
   if (!open) return null
 
+  // Attach distance from the user (when known) and sort closest-first.
+  const displayResults = results
+    .map((p) => ({
+      place: p,
+      distance:
+        coords && p.lat != null && p.lng != null
+          ? haversineMiles(coords, { lat: p.lat, lng: p.lng })
+          : null,
+    }))
+    .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
+
+  const showSpinner = locating || loadingNearby
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -213,29 +246,13 @@ export default function AddPlaceModal({
             </button>
           </div>
 
-          {/* Location + search controls */}
-          <button
-            onClick={useMyLocation}
-            disabled={locating || loadingNearby}
-            className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-xl py-3 font-semibold text-sm disabled:opacity-60"
-          >
-            {locating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Getting your location…
-              </>
-            ) : (
-              <>
-                <LocateFixed className="w-4 h-4" /> Use my location
-              </>
-            )}
-          </button>
-
+          {/* Secondary search — nearby restaurants load automatically on open. */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name…"
+              placeholder="Search for a restaurant…"
               className="w-full border border-gray-300 rounded-xl pl-9 pr-9 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
             {searching && (
@@ -243,42 +260,59 @@ export default function AddPlaceModal({
             )}
           </div>
 
-          {error && <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">{error}</p>}
+          {error && (
+            <div className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2 space-y-2">
+              <p>{error}</p>
+              {canRetryLocation && (
+                <button
+                  onClick={requestLocation}
+                  className="inline-flex items-center gap-1.5 text-orange-600 font-medium"
+                >
+                  <LocateFixed className="w-4 h-4" /> Use my location
+                </button>
+              )}
+            </div>
+          )}
 
-          {/* Nearby loading spinner */}
-          {loadingNearby && (
+          {/* Locating / nearby loading spinner */}
+          {showSpinner && (
             <div className="flex items-center justify-center gap-2 py-8 text-gray-400 text-sm">
-              <Loader2 className="w-5 h-5 animate-spin" /> Finding places nearby…
+              <Loader2 className="w-5 h-5 animate-spin" /> Finding restaurants near you…
             </div>
           )}
 
           {/* Results */}
-          {!loadingNearby && results.length > 0 && (
+          {!showSpinner && displayResults.length > 0 && (
             <div className="space-y-2">
-              {results.map((p) => (
-                <button
-                  key={p.googlePlaceId}
-                  onClick={() => pickPlace(p)}
-                  disabled={creatingId !== null}
-                  className="w-full text-left flex items-start gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-sm disabled:opacity-60"
-                >
-                  <div className="bg-orange-50 rounded-xl p-2 mt-0.5">
-                    <MapPin className="w-4 h-4 text-orange-500" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900 truncate">{p.name}</p>
-                    {p.address && <p className="text-xs text-gray-400 truncate">{p.address}</p>}
-                    {p.placeType && (
-                      <span className="inline-block mt-1 text-[11px] text-gray-500 bg-gray-100 rounded-full px-2 py-0.5 capitalize">
-                        {p.placeType}
-                      </span>
+              {displayResults.map(({ place: p, distance }) => {
+                const chip = cuisineChip(p.placeType)
+                const meta = [
+                  distance != null ? `${distance.toFixed(1)} mi` : null,
+                  chip?.label,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+                return (
+                  <button
+                    key={p.googlePlaceId}
+                    onClick={() => pickPlace(p)}
+                    disabled={creatingId !== null}
+                    className="w-full text-left flex items-start gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-sm disabled:opacity-60"
+                  >
+                    <div className="bg-orange-50 rounded-xl p-2 mt-0.5">
+                      <MapPin className="w-4 h-4 text-orange-500" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 truncate">{p.name}</p>
+                      {meta && <p className="text-xs text-gray-500 mt-0.5">{meta}</p>}
+                      {p.address && <p className="text-xs text-gray-400 truncate">{p.address}</p>}
+                    </div>
+                    {creatingId === p.googlePlaceId && (
+                      <Loader2 className="w-4 h-4 text-orange-500 animate-spin mt-1" />
                     )}
-                  </div>
-                  {creatingId === p.googlePlaceId && (
-                    <Loader2 className="w-4 h-4 text-orange-500 animate-spin mt-1" />
-                  )}
-                </button>
-              ))}
+                  </button>
+                )
+              })}
             </div>
           )}
 

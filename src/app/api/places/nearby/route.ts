@@ -27,7 +27,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(NEARBY_ENDPOINT)
     url.searchParams.set('location', `${lat},${lng}`)
-    url.searchParams.set('radius', '5000')
+    url.searchParams.set('radius', '1500')
     url.searchParams.set('type', 'restaurant')
     url.searchParams.set('key', apiKey)
 

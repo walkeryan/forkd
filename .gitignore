@@ -35,6 +35,7 @@ yarn-error.log*
 
 # local dev server artifacts
 devserver.log
+devserver.out.log
 devserver.err.log
 devserver.pid
 
