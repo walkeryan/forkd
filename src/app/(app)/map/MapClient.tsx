@@ -1,9 +1,9 @@
 'use client'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
+import { useCallback, useEffect, useState } from 'react'
+import { GoogleMap, MarkerF, InfoWindowF, useJsApiLoader } from '@react-google-maps/api'
 import Link from 'next/link'
-import { Star } from 'lucide-react'
-import 'leaflet/dist/leaflet.css'
+import { Star, Loader2, MapPin } from 'lucide-react'
+import { cuisineChip } from '@/lib/places'
 
 export interface MapPlace {
   id: string
@@ -12,64 +12,139 @@ export interface MapPlace {
   lng: number
   rating: number | null
   city: string | null
+  cuisine: string | null
+  visitCount: number
   status: 'visited' | 'wishlist'
 }
 
-// Leaflet's default marker assets break under bundlers, so we draw our own
-// colored pins as divIcons — orange for visited, blue for wishlist.
-function pin(color: string) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="background:${color};width:20px;height:20px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 20],
-    popupAnchor: [0, -20],
+const containerStyle = { width: '100%', height: '100%' }
+
+const VISITED_COLOR = '#f97316'
+const WISHLIST_COLOR = '#3b82f6'
+
+export default function MapClient({ places, center }: { places: MapPlace[]; center: { lat: number; lng: number } }) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: apiKey,
   })
-}
 
-const visitedIcon = pin('#f97316')
-const wishlistIcon = pin('#3b82f6')
+  const [selected, setSelected] = useState<MapPlace | null>(null)
 
-export default function MapClient({ places }: { places: MapPlace[] }) {
-  // Center on the mean of all coordinates, falling back to a sane default.
-  const center: [number, number] = places.length
-    ? [
-        places.reduce((s, p) => s + p.lat, 0) / places.length,
-        places.reduce((s, p) => s + p.lng, 0) / places.length,
-      ]
-    : [40.4406, -79.9959] // Pittsburgh
+  // Surface auth/config failures (bad key, Maps JS API not enabled, referrer
+  // restrictions). Google calls this global instead of rejecting the loader.
+  useEffect(() => {
+    const w = window as unknown as { gm_authFailure?: () => void }
+    w.gm_authFailure = () => {
+      console.error(
+        '[TasteLog] Google Maps failed to authenticate. Check that NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is correct and that the "Maps JavaScript API" is enabled (and not referrer-restricted) on the Google Cloud project.',
+      )
+    }
+    return () => {
+      delete w.gm_authFailure
+    }
+  }, [])
+
+  useEffect(() => {
+    if (loadError) {
+      console.error('[TasteLog] Google Maps JS failed to load:', loadError)
+    }
+  }, [loadError])
+
+  // Coloured pin built from the SDK's Symbol API once google is available.
+  const iconFor = useCallback((status: MapPlace['status']) => {
+    if (typeof google === 'undefined') return undefined
+    return {
+      path: google.maps.SymbolPath.CIRCLE,
+      fillColor: status === 'visited' ? VISITED_COLOR : WISHLIST_COLOR,
+      fillOpacity: 1,
+      strokeColor: '#ffffff',
+      strokeWeight: 2,
+      scale: 8,
+    }
+  }, [])
+
+  if (!apiKey) {
+    console.error('[TasteLog] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set — the map cannot load.')
+    return (
+      <div className="h-full w-full flex flex-col items-center justify-center text-center text-gray-400 px-6">
+        <MapPin className="w-10 h-10 mb-2 opacity-30" />
+        <p className="text-sm">Map unavailable — missing Google Maps API key.</p>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="h-full w-full flex flex-col items-center justify-center text-center text-gray-400 px-6">
+        <MapPin className="w-10 h-10 mb-2 opacity-30" />
+        <p className="text-sm">Couldn&apos;t load Google Maps. Check the API key and that the Maps JavaScript API is enabled.</p>
+      </div>
+    )
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="h-full w-full flex items-center justify-center text-gray-400">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    )
+  }
 
   return (
-    <MapContainer center={center} zoom={places.length ? 12 : 11} className="h-full w-full" scrollWheelZoom>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={center}
+      zoom={places.length ? 12 : 11}
+      options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
+      onClick={() => setSelected(null)}
+    >
       {places.map((p) => (
-        <Marker key={`${p.status}-${p.id}`} position={[p.lat, p.lng]} icon={p.status === 'visited' ? visitedIcon : wishlistIcon}>
-          <Popup>
-            <div className="min-w-[140px]">
-              <p className="font-semibold text-gray-900">{p.name}</p>
-              {p.city && <p className="text-xs text-gray-500">{p.city}</p>}
-              <div className="flex items-center justify-between mt-1">
-                {p.rating ? (
-                  <span className="flex items-center gap-0.5 text-orange-500 text-xs font-semibold">
-                    <Star className="w-3 h-3 fill-orange-500" /> {p.rating.toFixed(1)}
-                  </span>
-                ) : (
-                  <span className="text-xs text-blue-500 font-medium">Wishlist</span>
-                )}
-                <Link
-                  href={p.status === 'visited' ? `/places/${p.id}` : '/wishlist'}
-                  className="text-xs font-semibold text-orange-600"
-                >
-                  View →
-                </Link>
-              </div>
-            </div>
-          </Popup>
-        </Marker>
+        <MarkerF
+          key={`${p.status}-${p.id}`}
+          position={{ lat: p.lat, lng: p.lng }}
+          icon={iconFor(p.status)}
+          onClick={() => setSelected(p)}
+        />
       ))}
-    </MapContainer>
+
+      {selected && (
+        <InfoWindowF position={{ lat: selected.lat, lng: selected.lng }} onCloseClick={() => setSelected(null)}>
+          <div className="min-w-[150px] pr-1">
+            <p className="font-semibold text-gray-900">{selected.name}</p>
+            {selected.city && <p className="text-xs text-gray-500">{selected.city}</p>}
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              {(() => {
+                const chip = cuisineChip(selected.cuisine)
+                return chip ? (
+                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-[11px]">
+                    <span>{chip.emoji}</span>{chip.label}
+                  </span>
+                ) : null
+              })()}
+              {selected.status === 'wishlist' && (
+                <span className="text-[11px] text-blue-600 font-medium">Wishlist</span>
+              )}
+              {selected.rating != null && (
+                <span className="inline-flex items-center gap-0.5 text-orange-500 text-[11px] font-semibold">
+                  <Star className="w-3 h-3 fill-orange-500" />{selected.rating.toFixed(1)}
+                </span>
+              )}
+              {selected.status === 'visited' && selected.visitCount > 0 && (
+                <span className="text-[11px] text-gray-500">
+                  {selected.visitCount} visit{selected.visitCount !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <Link
+              href={selected.status === 'visited' ? `/places/${selected.id}` : '/wishlist'}
+              className="inline-block mt-2 text-xs font-semibold text-orange-600"
+            >
+              View →
+            </Link>
+          </div>
+        </InfoWindowF>
+      )}
+    </GoogleMap>
   )
 }

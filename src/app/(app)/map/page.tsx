@@ -12,7 +12,9 @@ export default async function MapPage() {
   const [userPlaces, wishlist] = await Promise.all([
     prisma.userPlace.findMany({
       where: { userId, status: 'visited' },
-      include: { place: true },
+      include: { place: true, _count: { select: { visits: true } } },
+      // Most recently visited first so it can seed the default map center.
+      orderBy: { lastVisited: { sort: 'desc', nulls: 'last' } },
     }),
     prisma.wishlistItem.findMany({
       where: { userId },
@@ -31,6 +33,8 @@ export default async function MapPage() {
         lng: up.place.lng as number,
         rating: up.rating,
         city: up.place.city,
+        cuisine: up.place.cuisine,
+        visitCount: up._count.visits,
         status: 'visited' as const,
       })),
     ...wishlist
@@ -42,9 +46,15 @@ export default async function MapPage() {
         lng: w.place.lng as number,
         rating: null,
         city: w.place.city,
+        cuisine: w.place.cuisine,
+        visitCount: 0,
         status: 'wishlist' as const,
       })),
   ]
+
+  // Center on the most recently visited place, else the first pinned place,
+  // else New York City.
+  const center = places.length ? { lat: places[0].lat, lng: places[0].lng } : { lat: 40.7128, lng: -74.006 }
 
   return (
     <div className="flex flex-col h-[calc(100dvh-4rem)]">
@@ -61,7 +71,7 @@ export default async function MapPage() {
         </div>
       ) : (
         <div className="flex-1 overflow-hidden">
-          <MapView places={places} />
+          <MapView places={places} center={center} />
         </div>
       )}
     </div>
