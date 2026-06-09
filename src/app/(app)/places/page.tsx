@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { MapPin, Plus, Star, SearchX } from 'lucide-react'
 import AddPlaceFab from '@/components/AddPlaceFab'
+import EmptyState from '@/components/EmptyState'
 import PlacesFilters, { type SortKey } from './PlacesFilters'
 import { cuisineChip } from '@/lib/places'
 
@@ -56,17 +57,9 @@ export default async function PlacesPage({
 
       {userPlaces.length === 0 ? (
         filtered ? (
-          <div className="text-center py-16 text-gray-400">
-            <SearchX className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-lg font-medium">No matches</p>
-            <p className="text-sm mt-1">Try a different search or clear your filters.</p>
-          </div>
+          <EmptyState icon={SearchX} title="No matches" hint="Try a different search or clear your filters." className="py-16" />
         ) : (
-          <div className="text-center py-20 text-gray-400">
-            <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-lg font-medium">No places yet</p>
-            <p className="text-sm mt-1">Tap + to add your first spot</p>
-          </div>
+          <EmptyState icon={MapPin} title="No places yet" hint="Tap + to add your first spot" className="py-20" />
         )
       ) : (
         <div className="space-y-3">

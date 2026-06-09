@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { Map as MapIcon } from 'lucide-react'
+import EmptyState from '@/components/EmptyState'
 import MapView from './MapView'
 import type { MapPlace } from './MapClient'
 
@@ -55,10 +56,8 @@ export default async function MapPage() {
         </div>
       </div>
       {places.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400 px-6">
-          <MapIcon className="w-12 h-12 mb-3 opacity-30" />
-          <p className="text-lg font-medium">Nothing to map yet</p>
-          <p className="text-sm mt-1">Add places with a location and they&apos;ll show up here.</p>
+        <div className="flex-1 flex items-center justify-center px-6">
+          <EmptyState icon={MapIcon} title="Nothing to map yet" hint="Add places with a location and they’ll show up here." />
         </div>
       ) : (
         <div className="flex-1 overflow-hidden">
