@@ -8,10 +8,10 @@ import { auth } from '@/auth'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'TasteLog',
+  title: "Fork'd",
   description: 'Track your favorite places and meals',
   manifest: '/manifest.json',
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'TasteLog' },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: "Fork'd" },
 }
 
 export const viewport: Viewport = {

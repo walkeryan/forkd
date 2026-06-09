@@ -5,7 +5,7 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm text-center">
         <div className="text-5xl mb-4">🍽️</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">TasteLog</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Fork&apos;d</h1>
         <p className="text-gray-500 mb-8 text-sm">Track your favorite places & meals</p>
         <form action={async () => { 'use server'; await signIn('google', { redirectTo: '/places' }) }}>
           <button

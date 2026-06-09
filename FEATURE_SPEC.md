@@ -1,4 +1,4 @@
-# TasteLog — Prioritized Feature Spec
+# Fork'd — Prioritized Feature Spec
 
 **Reviewed:** June 2026  
 **Codebase state:** Next.js 14 App Router, Prisma/PostgreSQL, NextAuth v5 (Google OAuth), local filesystem photo storage, no service worker.
@@ -130,7 +130,7 @@ The core loop works once you fix P0, but these gaps make the app feel unfinished
 
 **What:** `Visit.rating` exists in the schema but the log-visit form only collects date and notes. `UserPlace.rating` is the only rating that gets set, and it's set once for the whole relationship.
 
-**Why:** Your opinion of a restaurant changes over time. The first visit might be great (4 stars), a second visit might be bad (2 stars). You should be able to track this. Meal-level and visit-level ratings are the main thing that makes TasteLog better than a notes app.
+**Why:** Your opinion of a restaurant changes over time. The first visit might be great (4 stars), a second visit might be bad (2 stars). You should be able to track this. Meal-level and visit-level ratings are the main thing that makes Fork'd better than a notes app.
 
 **How:** Add a `<StarRating>` to the visit form in PlaceDetailClient. Include it in the `POST /api/visits` body. On the detail page, show the per-visit rating next to the date in the visits list. As a bonus, offer to auto-update the UserPlace rating to the average of all visit ratings (or let it be manual — but show the average as a reference).
 
@@ -196,7 +196,7 @@ The core loop works once you fix P0, but these gaps make the app feel unfinished
 
 ## P2 — Differentiated Value
 
-This is what would make someone choose TasteLog over just using Google Maps saved places or a notes app.
+This is what would make someone choose Fork'd over just using Google Maps saved places or a notes app.
 
 ---
 
@@ -240,7 +240,7 @@ Use `recharts` or a simple CSS bar chart for the monthly breakdown — no heavy 
 
 ### P2.4 — Shareable lists
 
-**What:** Generate a public shareable link for a curated list of your places. "My top 10 ramen spots in Pittsburgh" → `tastelog.com/s/abc123`.
+**What:** Generate a public shareable link for a curated list of your places. "My top 10 ramen spots in Pittsburgh" → `forkd.app/s/abc123`.
 
 **Why:** The schema already has `SharedList` with `slug` and `isPublic`. This is the feature that gets you word-of-mouth installs. You share a link in a group chat, people see a beautiful list of restaurants with your ratings and photos, and some of them install the app to make their own.
 
@@ -332,7 +332,7 @@ Nice-to-haves for a mature v2, after P0–P2 are solid.
 
 **What:** Let users upload a Google Takeout JSON export of their saved places and bulk-import them as UserPlaces (or WishlistItems).
 
-**Why:** Many users already have years of saved restaurants in Google Maps. The barrier to starting TasteLog from scratch is "I have to re-add everything." An import flow removes that barrier entirely.
+**Why:** Many users already have years of saved restaurants in Google Maps. The barrier to starting Fork'd from scratch is "I have to re-add everything." An import flow removes that barrier entirely.
 
 **How:** Build `POST /api/import/google-maps`. Parse the Takeout JSON format (`Saved Places.json`). For each place, look up via Google Places API by `googlePlaceId` (available in the export). Create `Place` and `UserPlace` records, skipping duplicates. This is a background job — respond with a job ID and poll for completion.
 

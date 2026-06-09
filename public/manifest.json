@@ -1,6 +1,6 @@
 {
-  "name": "TasteLog",
-  "short_name": "TasteLog",
+  "name": "Fork'd",
+  "short_name": "Fork'd",
   "description": "Track your favorite places and meals",
   "id": "/places",
   "start_url": "/places",

@@ -2,5 +2,5 @@
 set -e
 echo "Running database migrations..."
 npx prisma migrate deploy
-echo "Starting TasteLog..."
+echo "Starting Fork'd..."
 exec node server.js
