@@ -20,12 +20,12 @@ import type { NextAuthConfig } from 'next-auth'
   ],
   pages: { signIn: '/signin' },
   callbacks: {
-    jwt({ token, user }: { token: any; user?: any }) {
+    jwt({ token, user }) {
       if (user) token.id = user.id
       return token
 },
-    session({ session, token }: { session: any; token: any }) {
-      if (token.id) session.user.id = token.id as string
+    session({ session, token }) {
+      if (token.id) session.user.id = token.id
       return session
 },
 },
