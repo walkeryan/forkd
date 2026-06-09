@@ -1,0 +1,13 @@
+<svg width="520" height="180" viewBox="0 0 520 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fork'd">
+  <!-- Fork mark -->
+  <g transform="translate(40,35) scale(0.474) translate(-206,-140)" fill="#f97316">
+    <rect x="206" y="140" width="20" height="120" rx="10"/>
+    <rect x="246" y="140" width="20" height="120" rx="10"/>
+    <rect x="286" y="140" width="20" height="120" rx="10"/>
+    <path d="M206 245 L306 245 Q306 300 271 300 L271 357 A15 15 0 0 1 241 357 L241 300 Q206 300 206 245 Z"/>
+  </g>
+  <!-- Wordmark: the apostrophe is rendered in brand orange, echoing a fork tine -->
+  <text x="104" y="126"
+        font-family="'Poppins','Futura','Century Gothic','Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif"
+        font-size="104" font-weight="700" letter-spacing="-3" fill="#1c1917">Fork<tspan fill="#f97316">&#8217;</tspan>d</text>
+</svg>

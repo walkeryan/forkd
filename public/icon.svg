@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fork'd app icon">
+  <!-- Orange brand background -->
+  <circle cx="256" cy="256" r="256" fill="#f97316"/>
+  <!-- Stylized fork mark: 3 tines, tapered head, clean handle -->
+  <g fill="#ffffff">
+    <rect x="206" y="140" width="20" height="120" rx="10"/>
+    <rect x="246" y="140" width="20" height="120" rx="10"/>
+    <rect x="286" y="140" width="20" height="120" rx="10"/>
+    <path d="M206 245 L306 245 Q306 300 271 300 L271 357 A15 15 0 0 1 241 357 L241 300 Q206 300 206 245 Z"/>
+  </g>
+</svg>
