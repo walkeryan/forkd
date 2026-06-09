@@ -26,7 +26,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+!.env.example
+
+# uploaded photos (local filesystem store)
+/uploads
+
+# local dev server artifacts
+devserver.log
+devserver.pid
 
 # vercel
 .vercel

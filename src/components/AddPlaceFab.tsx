@@ -1,0 +1,30 @@
+'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Plus } from 'lucide-react'
+import AddPlaceModal from '@/components/AddPlaceModal'
+
+export default function AddPlaceFab() {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+
+  function handleSuccess(userPlaceId: string) {
+    setOpen(false)
+    // Refresh the list, then jump to the new place.
+    router.refresh()
+    router.push(`/places/${userPlaceId}`)
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Add place"
+        className="fixed bottom-24 right-5 z-40 bg-orange-500 text-white rounded-full p-4 shadow-lg active:scale-95 transition"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
+      <AddPlaceModal open={open} onClose={() => setOpen(false)} onSuccess={handleSuccess} />
+    </>
+  )
+}
