@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StarRating from '@/components/StarRating'
-import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check } from 'lucide-react'
+import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X } from 'lucide-react'
 
 export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
   const router = useRouter()
@@ -139,6 +139,12 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
     form.append('userPlaceId', userPlace.id)
     await fetch('/api/photos', { method: 'POST', body: form })
     setUploadingPhoto(false)
+    router.refresh()
+  }
+
+  async function deletePhoto(id: string) {
+    if (!confirm('Delete this photo?')) return
+    await fetch(`/api/photos/${id}`, { method: 'DELETE' })
     router.refresh()
   }
 
@@ -361,8 +367,16 @@ export default function PlaceDetailClient({ userPlace }: { userPlace: any }) {
         ) : (
           <div className="grid grid-cols-3 gap-1.5">
             {photos.map((photo: any) => (
-              <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+              <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
                 <img src={`/api/photos/${photo.id}`} alt={photo.caption ?? ''} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => deletePhoto(photo.id)}
+                  aria-label="Delete photo"
+                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 active:bg-black/70"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             ))}
           </div>
