@@ -25,7 +25,7 @@ import type { NextAuthConfig } from 'next-auth'
       return token
 },
     session({ session, token }) {
-      if (token.id) session.user.id = token.id
+      if (token.id) session.user.id = token.id as string
       return session
 },
 },
