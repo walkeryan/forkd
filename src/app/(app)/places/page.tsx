@@ -1,33 +1,72 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { MapPin, Plus, Star } from 'lucide-react'
+import { MapPin, Plus, Star, SearchX } from 'lucide-react'
 import AddPlaceFab from '@/components/AddPlaceFab'
+import PlacesFilters, { type SortKey } from './PlacesFilters'
 
-export default async function PlacesPage() {
+const SORT_ORDER: Record<SortKey, Prisma.UserPlaceOrderByWithRelationInput> = {
+  recent: { updatedAt: 'desc' },
+  top: { rating: { sort: 'desc', nulls: 'last' } },
+  visited: { visits: { _count: 'desc' } },
+  name: { place: { name: 'asc' } },
+}
+
+export default async function PlacesPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; sort?: string; price?: string }
+}) {
   const session = await auth()
+  const q = searchParams.q?.trim() ?? ''
+  const sort: SortKey = (['recent', 'top', 'visited', 'name'] as const).includes(searchParams.sort as SortKey)
+    ? (searchParams.sort as SortKey)
+    : 'recent'
+  const price = searchParams.price ? Number(searchParams.price) : null
+
+  const where: Prisma.UserPlaceWhereInput = {
+    userId: session!.user!.id,
+    status: 'visited',
+    ...(q && { place: { name: { contains: q, mode: 'insensitive' } } }),
+    ...(price && { priceRange: price }),
+  }
+
   const userPlaces = await prisma.userPlace.findMany({
-    where: { userId: session!.user!.id, status: 'visited' },
+    where,
     include: { place: true, _count: { select: { visits: true } } },
-    orderBy: { updatedAt: 'desc' },
+    orderBy: SORT_ORDER[sort],
   })
+
+  const filtered = !!q || !!price
+  const totalTracked = filtered ? await prisma.userPlace.count({ where: { userId: session!.user!.id, status: 'visited' } }) : userPlaces.length
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900">My Places</h1>
         <Link href="/places?add=true" className="bg-orange-500 text-white rounded-full p-2 shadow">
           <Plus className="w-5 h-5" />
         </Link>
       </div>
 
+      {totalTracked > 0 && <PlacesFilters q={q} sort={sort} price={price} />}
+
       {userPlaces.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-lg font-medium">No places yet</p>
-          <p className="text-sm mt-1">Tap + to add your first spot</p>
-        </div>
+        filtered ? (
+          <div className="text-center py-16 text-gray-400">
+            <SearchX className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="text-lg font-medium">No matches</p>
+            <p className="text-sm mt-1">Try a different search or clear your filters.</p>
+          </div>
+        ) : (
+          <div className="text-center py-20 text-gray-400">
+            <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="text-lg font-medium">No places yet</p>
+            <p className="text-sm mt-1">Tap + to add your first spot</p>
+          </div>
+        )
       ) : (
         <div className="space-y-3">
           {userPlaces.map(({ id, place, rating, priceRange, _count }) => (

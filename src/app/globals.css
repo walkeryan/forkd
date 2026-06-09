@@ -24,4 +24,13 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Hide horizontal scrollbars on filter/pill rows. */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
