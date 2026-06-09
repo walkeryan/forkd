@@ -29,6 +29,10 @@ yarn-error.log*
 .env
 .env*.local
 !.env.example
+!.env.prod.example
+
+# generated production secrets
+POSTGRES_PASSWORD.txt
 
 # uploaded photos (local filesystem store)
 /uploads

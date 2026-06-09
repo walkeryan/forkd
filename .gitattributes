@@ -1,0 +1,7 @@
+# Ensure shell scripts and Docker files always use LF so they run inside Linux
+# containers regardless of the host OS that checked them out.
+*.sh            text eol=lf
+docker-entrypoint.sh text eol=lf
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
