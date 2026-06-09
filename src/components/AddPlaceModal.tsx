@@ -1,6 +1,8 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MapPin, Search, X, Loader2, LocateFixed, PenLine } from 'lucide-react'
+import { MapPin, Search, X, Loader2, LocateFixed, PenLine, Check, Bookmark } from 'lucide-react'
+
+type AddMode = 'visited' | 'wishlist'
 
 interface PlaceResult {
   googlePlaceId: string
@@ -23,8 +25,9 @@ export default function AddPlaceModal({
 }: {
   open: boolean
   onClose: () => void
-  onSuccess: (userPlaceId: string) => void
+  onSuccess: (id: string, mode: AddMode) => void
 }) {
+  const [mode, setMode] = useState<AddMode>('visited')
   const [coords, setCoords] = useState<Coords | null>(null)
   const [locating, setLocating] = useState(false)
   const [loadingNearby, setLoadingNearby] = useState(false)
@@ -39,6 +42,7 @@ export default function AddPlaceModal({
   // Reset state whenever the modal is reopened.
   useEffect(() => {
     if (open) {
+      setMode('visited')
       setCoords(null)
       setLocating(false)
       setLoadingNearby(false)
@@ -139,7 +143,8 @@ export default function AddPlaceModal({
     setCreatingId(key)
     setError(null)
     try {
-      const res = await fetch('/api/places', {
+      const endpoint = mode === 'wishlist' ? '/api/wishlist' : '/api/places'
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -150,7 +155,7 @@ export default function AddPlaceModal({
         setCreatingId(null)
         return
       }
-      onSuccess(data.userPlaceId)
+      onSuccess(mode === 'wishlist' ? data.wishlistItemId : data.userPlaceId, mode)
     } catch {
       setError('Could not add place')
       setCreatingId(null)
@@ -192,6 +197,22 @@ export default function AddPlaceModal({
         </div>
 
         <div className="overflow-y-auto px-5 py-4 space-y-4">
+          {/* Visited vs. wishlist toggle */}
+          <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1">
+            <button
+              onClick={() => setMode('visited')}
+              className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${mode === 'visited' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`}
+            >
+              <Check className="w-4 h-4" /> Visited
+            </button>
+            <button
+              onClick={() => setMode('wishlist')}
+              className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${mode === 'wishlist' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
+            >
+              <Bookmark className="w-4 h-4" /> Wishlist
+            </button>
+          </div>
+
           {/* Location + search controls */}
           <button
             onClick={useMyLocation}

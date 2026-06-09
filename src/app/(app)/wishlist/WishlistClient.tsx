@@ -1,0 +1,80 @@
+'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { MapPin, Check, Trash2, Loader2 } from 'lucide-react'
+
+export interface WishlistEntry {
+  id: string
+  name: string
+  city: string | null
+  state: string | null
+  notes: string | null
+}
+
+export default function WishlistClient({ items }: { items: WishlistEntry[] }) {
+  const router = useRouter()
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  async function markVisited(id: string) {
+    setBusyId(id)
+    const res = await fetch(`/api/wishlist/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitedAt: new Date().toISOString() }),
+    })
+    if (!res.ok) {
+      setBusyId(null)
+      return
+    }
+    const data = await res.json()
+    router.push(`/places/${data.userPlaceId}`)
+    router.refresh()
+  }
+
+  async function remove(id: string) {
+    setBusyId(id)
+    const res = await fetch(`/api/wishlist/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      setBusyId(null)
+      return
+    }
+    router.refresh()
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.map((item) => (
+        <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="font-semibold text-gray-900">{item.name}</h2>
+              {item.city && (
+                <p className="flex items-center gap-1 text-sm text-gray-400 mt-0.5">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {item.city}{item.state ? `, ${item.state}` : ''}
+                </p>
+              )}
+              {item.notes && <p className="text-xs text-gray-400 mt-1">{item.notes}</p>}
+            </div>
+            <button
+              onClick={() => remove(item.id)}
+              disabled={busyId === item.id}
+              aria-label="Remove from wishlist"
+              className="text-gray-300 hover:text-red-500 p-1 flex-shrink-0 disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+          <button
+            onClick={() => markVisited(item.id)}
+            disabled={busyId === item.id}
+            className="mt-3 w-full bg-orange-500 text-white rounded-xl py-2 text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {busyId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            Mark as Visited
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}

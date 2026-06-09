@@ -18,11 +18,11 @@ export default function AddPlaceFab() {
     }
   }, [searchParams, router])
 
-  function handleSuccess(userPlaceId: string) {
+  function handleSuccess(id: string, mode: 'visited' | 'wishlist') {
     setOpen(false)
-    // Refresh the list, then jump to the new place.
     router.refresh()
-    router.push(`/places/${userPlaceId}`)
+    // Visited places open their detail page; wishlist items go to the list.
+    router.push(mode === 'wishlist' ? '/wishlist' : `/places/${id}`)
   }
 
   return (
