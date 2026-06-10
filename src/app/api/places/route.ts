@@ -51,19 +51,31 @@ export async function POST(req: Request) {
   // with its first visit already recorded (defaulting to today). Callers can
   // opt out with skipVisit (e.g. backfilling a place visited long ago).
   const firstVisit = skipVisit ? null : new Date(visitedAt ?? Date.now())
-  const userPlace = await prisma.userPlace.create({
-    data: {
-      userId,
-      placeId: place.id,
-      notes,
-      status: 'visited',
-      ...(rating != null && { rating }),
-      ...(firstVisit && {
-        visitCount: 1,
-        lastVisited: firstVisit,
-        visits: { create: { visitedAt: firstVisit, ...(rating != null && { rating }) } },
-      }),
-    },
-  })
-  return NextResponse.json({ userPlaceId: userPlace.id }, { status: 201 })
+  try {
+    const userPlace = await prisma.userPlace.create({
+      data: {
+        userId,
+        placeId: place.id,
+        notes,
+        status: 'visited',
+        ...(rating != null && { rating }),
+        ...(firstVisit && {
+          visitCount: 1,
+          lastVisited: firstVisit,
+          visits: { create: { visitedAt: firstVisit, ...(rating != null && { rating }) } },
+        }),
+      },
+    })
+    return NextResponse.json({ userPlaceId: userPlace.id }, { status: 201 })
+  } catch (e) {
+    // P2003 = the JWT session references a user that no longer exists (e.g.
+    // after a database reset). Stateless sessions outlive the User row.
+    if ((e as { code?: string }).code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Your session is out of date — please sign out and back in.' },
+        { status: 401 },
+      )
+    }
+    throw e
+  }
 }

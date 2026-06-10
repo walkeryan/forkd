@@ -31,8 +31,19 @@ export async function POST(req: Request) {
 
   await enrichPlace(place.id)
 
-  const item = await prisma.wishlistItem.create({
-    data: { userId, placeId: place.id, notes },
-  })
-  return NextResponse.json({ wishlistItemId: item.id }, { status: 201 })
+  try {
+    const item = await prisma.wishlistItem.create({
+      data: { userId, placeId: place.id, notes },
+    })
+    return NextResponse.json({ wishlistItemId: item.id }, { status: 201 })
+  } catch (e) {
+    // P2003 = stale JWT session referencing a deleted user (post-DB-reset).
+    if ((e as { code?: string }).code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Your session is out of date — please sign out and back in.' },
+        { status: 401 },
+      )
+    }
+    throw e
+  }
 }
