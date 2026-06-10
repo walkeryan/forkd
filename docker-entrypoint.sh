@@ -37,7 +37,7 @@ ls_out=$(ls /app/node_modules/.prisma/client/ 2>&1)
 tlog "$ls_out"
 tlog ""
 tlog "--- Running database migrations ---"
-migrate_out=$(node ./node_modules/prisma/build/index.js migrate deploy 2>&1)
+migrate_out=$(node /opt/prisma-cli/node_modules/prisma/build/index.js migrate deploy 2>&1)
 MIGRATE_EXIT=$?
 tlog "$migrate_out"
 tlog "--- Migration exit code: $MIGRATE_EXIT ---"

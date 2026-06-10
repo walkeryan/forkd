@@ -24,7 +24,18 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# ---- Stage 3: runner ----
+# ---- Stage 3: prisma-cli ----
+# The Prisma CLI (needed at runtime for `migrate deploy`) has a deep dependency
+# tree (@prisma/config -> effect, c12, deepmerge-ts, empathic, and their
+# transitive deps). Hand-picking COPY lines from the builder misses these and
+# breaks with "Cannot find module 'effect'" at startup. Installing the CLI
+# fresh with npm guarantees the full closure, pinned to the app's version.
+FROM node:20-alpine AS prisma-cli
+WORKDIR /cli
+COPY package.json ./
+RUN npm install --no-save --omit=dev prisma@"$(node -p "require('./package.json').dependencies.prisma")"
+
+# ---- Stage 4: runner ----
 FROM node:20-alpine AS runner
 WORKDIR /app
 # openssl is required by Prisma's schema engine binary (used by migrate deploy).
@@ -45,12 +56,14 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Prisma CLI + generated client + engines, needed to run `prisma migrate deploy`
+# Generated client + engines for the app's runtime
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+
+# Self-contained Prisma CLI (with full dependency closure) for `migrate deploy`,
+# kept outside /app/node_modules so it can't conflict with the standalone bundle
+COPY --from=prisma-cli /cli/node_modules /opt/prisma-cli/node_modules
 
 # Entrypoint runs migrations then boots the server
 COPY docker-entrypoint.sh ./

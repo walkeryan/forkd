@@ -1,0 +1,19 @@
+version: '3.8'
+# Local test override. Run with:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.local-test.yml --env-file .env.local-test up --build
+#
+# - Builds the image from the local Dockerfile instead of pulling ghcr.io
+# - Overrides NEXTAUTH_URL for localhost
+# - Excludes watchtower (not needed locally)
+services:
+  forkd:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    image: forkd:local
+    environment:
+      - NEXTAUTH_URL=http://localhost:3333
+  watchtower:
+    profiles:
+      - disabled   # exclude watchtower from local runs

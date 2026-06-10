@@ -1,5 +1,10 @@
-import { auth } from '@/auth'
+import NextAuth from 'next-auth'
+import { authConfig } from '@/auth.config'
 import { NextResponse } from 'next/server'
+
+// Use the lightweight, adapter-free config so this module is safe to load in
+// the Next.js Edge Runtime (no Prisma, no native binaries, no setImmediate).
+const { auth } = NextAuth(authConfig)
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth
