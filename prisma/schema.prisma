@@ -69,6 +69,7 @@ model Place {
   cuisine       String?
   phone         String?
   website       String?
+  imagePath     String?  // cached Google Places photo, relative to UPLOAD_DIR
   createdAt     DateTime @default(now())
   userPlaces    UserPlace[]
   wishlist      WishlistItem[]

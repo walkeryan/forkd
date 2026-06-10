@@ -3,13 +3,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { MapPin, Check, Trash2, Loader2 } from 'lucide-react'
+import PlaceAvatar from '@/components/PlaceAvatar'
 
 export interface WishlistEntry {
   id: string
+  placeId: string
   name: string
   city: string | null
   state: string | null
   notes: string | null
+  website: string | null
+  imagePath: string | null
+  cuisine: string | null
 }
 
 export default function WishlistClient({ items }: { items: WishlistEntry[] }) {
@@ -51,7 +56,12 @@ export default function WishlistClient({ items }: { items: WishlistEntry[] }) {
       {items.map((item) => (
         <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
+            <div className="flex items-start gap-3 min-w-0">
+              <PlaceAvatar
+                place={{ id: item.placeId, name: item.name, website: item.website, imagePath: item.imagePath, cuisine: item.cuisine }}
+                size="md"
+              />
+              <div className="min-w-0">
               <h2 className="font-semibold text-gray-900">{item.name}</h2>
               {item.city && (
                 <p className="flex items-center gap-1 text-sm text-gray-400 mt-0.5">
@@ -60,6 +70,7 @@ export default function WishlistClient({ items }: { items: WishlistEntry[] }) {
                 </p>
               )}
               {item.notes && <p className="text-xs text-gray-400 mt-1">{item.notes}</p>}
+              </div>
             </div>
             <button
               onClick={() => remove(item.id)}

@@ -6,6 +6,7 @@ import { Suspense } from 'react'
 import { MapPin, Plus, Star, SearchX } from 'lucide-react'
 import AddPlaceFab from '@/components/AddPlaceFab'
 import EmptyState from '@/components/EmptyState'
+import PlaceAvatar from '@/components/PlaceAvatar'
 import PlacesFilters, { type SortKey } from './PlacesFilters'
 import { cuisineChip } from '@/lib/places'
 
@@ -65,13 +66,16 @@ export default async function PlacesPage({
         <div className="space-y-3">
           {userPlaces.map(({ id, place, rating, priceRange, _count }) => (
             <Link key={id} href={`/places/${id}`} className="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="font-semibold text-gray-900">{place.name}</h2>
-                  {place.city && <p className="text-sm text-gray-400 mt-0.5">{place.city}{place.state ? `, ${place.state}` : ''}</p>}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <PlaceAvatar place={place} size="md" />
+                  <div className="min-w-0">
+                    <h2 className="font-semibold text-gray-900 truncate">{place.name}</h2>
+                    {place.city && <p className="text-sm text-gray-400 mt-0.5">{place.city}{place.state ? `, ${place.state}` : ''}</p>}
+                  </div>
                 </div>
                 {rating && (
-                  <div className="flex items-center gap-1 text-orange-500">
+                  <div className="flex items-center gap-1 text-orange-500 flex-shrink-0">
                     <Star className="w-4 h-4 fill-orange-500" />
                     <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
                   </div>

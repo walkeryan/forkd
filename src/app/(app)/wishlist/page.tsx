@@ -14,10 +14,14 @@ export default async function WishlistPage() {
 
   const entries: WishlistEntry[] = items.map((i) => ({
     id: i.id,
+    placeId: i.place.id,
     name: i.place.name,
     city: i.place.city,
     state: i.place.state,
     notes: i.notes,
+    website: i.place.website,
+    imagePath: i.place.imagePath,
+    cuisine: i.place.cuisine,
   }))
 
   return (

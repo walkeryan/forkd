@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { enrichPlace } from '@/lib/placeEnrichment'
 
 export async function GET() {
   const session = await auth()
@@ -41,6 +42,10 @@ export async function POST(req: Request) {
       data: { name, address, city, state, lat, lng, cuisine: placeType || undefined, googlePlaceId: googlePlaceId || undefined },
     })
   }
+
+  // Fetch website + a cached photo for the place's avatar. Best-effort and
+  // also backfills places created before enrichment existed.
+  await enrichPlace(place.id)
 
   // The common flow is "I just ate here, let me log it", so a place is added
   // with its first visit already recorded (defaulting to today). Callers can

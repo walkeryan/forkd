@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import StarRating from '@/components/StarRating'
 import PhotoLightbox from '@/components/PhotoLightbox'
 import MealForm from '@/components/MealForm'
+import PlaceAvatar from '@/components/PlaceAvatar'
 import PlaceSpecials from '@/components/PlaceSpecials'
 import { cuisineChip } from '@/lib/places'
 import type { UserPlaceWithRelations, MealWithRelations, VisitWithRelations, PlaceTagWithTag, PlaceSpecial } from '@/types/models'
@@ -180,7 +181,9 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
 
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+        <div className="flex items-start gap-3 min-w-0">
+          <PlaceAvatar place={place} size="lg" />
+          <div className="min-w-0">
           <h1 className="text-2xl font-bold text-gray-900">{place.name}</h1>
           {place.city && (
             <div className="flex items-center gap-1 text-gray-400 mt-1 text-sm">
@@ -196,6 +199,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
               </span>
             ) : null
           })()}
+          </div>
         </div>
         <div className="relative flex-shrink-0">
           <button

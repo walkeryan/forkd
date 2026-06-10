@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { enrichPlace } from '@/lib/placeEnrichment'
 
 // Add a place to the user's want-to-try list. Mirrors POST /api/places but
 // creates a WishlistItem instead of a visited UserPlace.
@@ -27,6 +28,8 @@ export async function POST(req: Request) {
       data: { name, address, city, state, lat, lng, cuisine: placeType || undefined, googlePlaceId: googlePlaceId || undefined },
     })
   }
+
+  await enrichPlace(place.id)
 
   const item = await prisma.wishlistItem.create({
     data: { userId, placeId: place.id, notes },
