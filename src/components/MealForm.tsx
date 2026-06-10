@@ -64,12 +64,14 @@ export default function MealForm({
   const query = name.trim().toLowerCase()
   const filtered = useMemo(() => {
     if (query.length < 1) return []
-    // Place-specific dishes first, then matches from every other bank so
-    // typing always finds something even at places with no curated menu.
-    const local = allSuggestions.filter((d) => d.toLowerCase().includes(query))
-    const seen = new Set(local.map((d) => d.toLowerCase()))
-    const global = searchDishes(query).filter((d) => !seen.has(d.toLowerCase()))
-    return [...local, ...global].slice(0, 8)
+    // A place with a curated bank (chain menu or cuisine list) searches only
+    // its own dishes — cross-chain items like "Chick-fil-A Chicken Sandwich"
+    // are noise at McDonald's. The global all-banks search is purely the
+    // fallback for places with no bank at all.
+    if (allSuggestions.length > 0) {
+      return allSuggestions.filter((d) => d.toLowerCase().includes(query)).slice(0, 8)
+    }
+    return searchDishes(query, 8)
   }, [allSuggestions, query])
 
   function addFiles(e: React.ChangeEvent<HTMLInputElement>) {
