@@ -345,6 +345,13 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
                     {meal.notes && <p className="text-xs text-gray-400">{meal.notes}</p>}
                     {meal.serviceNotes && <p className="text-xs text-gray-400"><span className="text-gray-500 font-medium">Service:</span> {meal.serviceNotes}</p>}
                     {meal.managementNotes && <p className="text-xs text-gray-400"><span className="text-gray-500 font-medium">Atmosphere:</span> {meal.managementNotes}</p>}
+                    {meal.photos.length > 0 && (
+                      <div className="flex gap-1.5 mt-1.5">
+                        {meal.photos.map((p) => (
+                          <img key={p.id} src={`/api/photos/${p.id}`} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button onClick={() => startEditMeal(meal)} aria-label="Edit meal" className="text-gray-300 hover:text-gray-500 p-1"><Pencil className="w-4 h-4" /></button>

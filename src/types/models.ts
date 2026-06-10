@@ -5,7 +5,7 @@ import type { Prisma } from '@prisma/client'
 export type UserPlaceWithRelations = Prisma.UserPlaceGetPayload<{
   include: {
     place: true
-    meals: true
+    meals: { include: { photos: true } }
     visits: true
     photos: true
     tags: { include: { tag: true } }

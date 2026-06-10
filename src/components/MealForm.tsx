@@ -44,6 +44,7 @@ export default function MealForm({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus()
@@ -105,15 +106,22 @@ export default function MealForm({
 
       // Upload selected photos, linking each to both the meal and the visit.
       if (photos.length) {
-        await Promise.all(
-          photos.map((file) => {
-            const form = new FormData()
-            form.append('file', file)
-            form.append('userPlaceId', userPlaceId)
-            form.append('mealId', meal.id)
-            return fetch('/api/photos', { method: 'POST', body: form })
+        const results = await Promise.all(
+          photos.map(async (file) => {
+            try {
+              const form = new FormData()
+              form.append('file', file)
+              form.append('userPlaceId', userPlaceId)
+              form.append('mealId', meal.id)
+              const r = await fetch('/api/photos', { method: 'POST', body: form })
+              return r.ok
+            } catch {
+              return false
+            }
           }),
         )
+        const failed = results.filter((ok) => !ok).length
+        if (failed > 0) toast.error(`${failed} photo${failed > 1 ? 's' : ''} failed to upload`)
       }
 
       toast.success('Meal added')
@@ -199,11 +207,16 @@ export default function MealForm({
               </button>
             </div>
           ))}
-          <label className="w-16 h-16 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 cursor-pointer active:bg-gray-50">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-16 h-16 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 active:bg-gray-50"
+            aria-label="Add photo"
+          >
             <Camera className="w-5 h-5" />
             <span className="text-[10px]">Photo</span>
-            <input type="file" accept="image/*" multiple className="hidden" onChange={addFiles} />
-          </label>
+          </button>
+          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={addFiles} />
         </div>
       </div>
 

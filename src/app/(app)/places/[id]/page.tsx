@@ -11,7 +11,7 @@ export default async function PlaceDetailPage({ params }: { params: { id: string
       where: { id: params.id, userId },
       include: {
         place: true,
-        meals: { orderBy: { isFavorite: 'desc' } },
+        meals: { orderBy: { isFavorite: 'desc' }, include: { photos: { orderBy: { createdAt: 'desc' } } } },
         visits: { orderBy: { visitedAt: 'desc' } },
         photos: { orderBy: { createdAt: 'desc' }, take: 12 },
         tags: { include: { tag: true } },
