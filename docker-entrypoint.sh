@@ -20,8 +20,10 @@ tlog() {
 # assembling the connection string.
 if [ -n "$POSTGRES_PASSWORD" ]; then
   _enc=$(node -e "process.stdout.write(encodeURIComponent(process.env.POSTGRES_PASSWORD))" 2>/dev/null)
-  export DATABASE_URL="postgresql://tastelog:${_enc}@forkd-db:5432/tastelog"
-  unset _enc
+  _db_user="${POSTGRES_USER:-forkd}"
+  _db_name="${POSTGRES_DB:-forkd}"
+  export DATABASE_URL="postgresql://${_db_user}:${_enc}@forkd-db:5432/${_db_name}"
+  unset _enc _db_user _db_name
 fi
 # ──────────────────────────────────────────────────────────────────────────────
 
