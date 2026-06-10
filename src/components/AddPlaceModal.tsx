@@ -1,7 +1,8 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MapPin, Search, X, Loader2, LocateFixed, PenLine, Check, Bookmark } from 'lucide-react'
 import { cuisineChip } from '@/lib/places'
+import { chainDomain } from '@/lib/menuData'
 import MealForm from '@/components/MealForm'
 
 type AddMode = 'visited' | 'wishlist'
@@ -16,11 +17,21 @@ interface PlaceResult {
   photoReference: string | null
 }
 
-// Search-result thumbnail served through the cached preview proxy, falling
-// back to the generic pin while loading-less or on error.
+// Search-result thumbnail: known-chain logo first, then the cached place
+// photo, then the generic pin. Mirrors PlaceAvatar's logo-first priority.
 function ResultThumb({ place }: { place: PlaceResult }) {
-  const [failed, setFailed] = useState(false)
-  if (!place.photoReference || failed) {
+  const sources = useMemo(() => {
+    const list: string[] = []
+    const domain = chainDomain(place.name)
+    if (domain) list.push(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`)
+    if (place.photoReference) {
+      list.push(`/api/places/preview-photo?placeId=${encodeURIComponent(place.googlePlaceId)}&ref=${encodeURIComponent(place.photoReference)}`)
+    }
+    return list
+  }, [place.name, place.googlePlaceId, place.photoReference])
+  const [srcIndex, setSrcIndex] = useState(0)
+
+  if (srcIndex >= sources.length) {
     return (
       <div className="bg-orange-50 rounded-xl p-2 mt-0.5 flex-shrink-0">
         <MapPin className="w-4 h-4 text-orange-500" />
@@ -29,10 +40,10 @@ function ResultThumb({ place }: { place: PlaceResult }) {
   }
   return (
     <img
-      src={`/api/places/preview-photo?placeId=${encodeURIComponent(place.googlePlaceId)}&ref=${encodeURIComponent(place.photoReference)}`}
+      src={sources[srcIndex]}
       alt=""
-      onError={() => setFailed(true)}
-      className="w-10 h-10 rounded-xl object-cover bg-stone-100 mt-0.5 flex-shrink-0"
+      onError={() => setSrcIndex((i) => i + 1)}
+      className="w-10 h-10 rounded-xl object-cover bg-stone-100 mt-0.5 flex-shrink-0 border border-stone-200/60"
     />
   )
 }

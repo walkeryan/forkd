@@ -370,6 +370,47 @@ function matchChain(placeName: string): string | null {
   return null
 }
 
+/** Official domains for the known chains — powers logo lookups by name. */
+const CHAIN_DOMAINS: Record<string, string> = {
+  "McDonald's": 'mcdonalds.com',
+  'Burger King': 'bk.com',
+  "Wendy's": 'wendys.com',
+  'Chick-fil-A': 'chick-fil-a.com',
+  'Taco Bell': 'tacobell.com',
+  'Chipotle': 'chipotle.com',
+  'Subway': 'subway.com',
+  'Starbucks': 'starbucks.com',
+  "Dunkin'": 'dunkindonuts.com',
+  "Domino's": 'dominos.com',
+  'Pizza Hut': 'pizzahut.com',
+  'Panera Bread': 'panerabread.com',
+  'Five Guys': 'fiveguys.com',
+  'Shake Shack': 'shakeshack.com',
+  'Popeyes': 'popeyes.com',
+  'KFC': 'kfc.com',
+  'Wingstop': 'wingstop.com',
+  'Buffalo Wild Wings': 'buffalowildwings.com',
+  'Olive Garden': 'olivegarden.com',
+  "Applebee's": 'applebees.com',
+  "Chili's": 'chilis.com',
+  'IHOP': 'ihop.com',
+  "Denny's": 'dennys.com',
+  'Texas Roadhouse': 'texasroadhouse.com',
+  'Outback Steakhouse': 'outback.com',
+  'Cheesecake Factory': 'thecheesecakefactory.com',
+  'Panda Express': 'pandaexpress.com',
+}
+
+/**
+ * Resolve a place name to a known chain's official domain (e.g. "McDonald's
+ * #4523" -> "mcdonalds.com") so chain logos can render before the place has
+ * been added and enriched with its real website.
+ */
+export function chainDomain(placeName: string): string | null {
+  const key = matchChain(placeName)
+  return key ? CHAIN_DOMAINS[key] ?? null : null
+}
+
 /** Every known dish across all chain and cuisine banks, deduped and sorted. */
 const ALL_DISHES: string[] = (() => {
   const seen = new Set<string>()
