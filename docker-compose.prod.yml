@@ -54,6 +54,20 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: forkd --interval 300 --cleanup
 
+  # Cloudflare Tunnel connector — publishes the app at the public domain via
+  # an outbound-only connection (no port forwarding, home IP stays hidden).
+  # Requires TUNNEL_TOKEN in the stack .env; omit it and this service just
+  # restarts harmlessly without affecting the app.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: forkd-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - forkd
+
 volumes:
   forkd-uploads:
   forkd-db-data:
