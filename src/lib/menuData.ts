@@ -370,6 +370,40 @@ function matchChain(placeName: string): string | null {
   return null
 }
 
+/** Every known dish across all chain and cuisine banks, deduped and sorted. */
+const ALL_DISHES: string[] = (() => {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const list of [...Object.values(CHAIN_MENUS), ...Object.values(CUISINE_MENUS)]) {
+    for (const dish of list) {
+      const key = dish.toLowerCase()
+      if (!seen.has(key)) {
+        seen.add(key)
+        out.push(dish)
+      }
+    }
+  }
+  return out.sort((a, b) => a.localeCompare(b))
+})()
+
+/**
+ * Search every dish bank for a typed query, prefix matches first. Used by the
+ * meal form typeahead so typing always finds dishes even when the place
+ * doesn't match a chain or cuisine bank.
+ */
+export function searchDishes(query: string, limit = 12): string[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return []
+  const starts: string[] = []
+  const contains: string[] = []
+  for (const dish of ALL_DISHES) {
+    const dl = dish.toLowerCase()
+    if (dl.startsWith(q)) starts.push(dish)
+    else if (dl.includes(q)) contains.push(dish)
+  }
+  return [...starts, ...contains].slice(0, limit)
+}
+
 /**
  * Return dish suggestions for a place. Prefers an exact-ish chain match on the
  * place name; otherwise falls back to a cuisine bank. Returns an empty array

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Camera, ChevronDown, ChevronUp, Loader2, X } from 'lucide-react'
 import StarRating from '@/components/StarRating'
-import { getMenuSuggestions } from '@/lib/menuData'
+import { getMenuSuggestions, searchDishes } from '@/lib/menuData'
 
 interface MealFormProps {
   userPlaceId: string
@@ -63,7 +63,12 @@ export default function MealForm({
   const query = name.trim().toLowerCase()
   const filtered = useMemo(() => {
     if (query.length < 1) return []
-    return allSuggestions.filter((d) => d.toLowerCase().includes(query)).slice(0, 8)
+    // Place-specific dishes first, then matches from every other bank so
+    // typing always finds something even at places with no curated menu.
+    const local = allSuggestions.filter((d) => d.toLowerCase().includes(query))
+    const seen = new Set(local.map((d) => d.toLowerCase()))
+    const global = searchDishes(query).filter((d) => !seen.has(d.toLowerCase()))
+    return [...local, ...global].slice(0, 8)
   }, [allSuggestions, query])
 
   function addFiles(e: React.ChangeEvent<HTMLInputElement>) {
