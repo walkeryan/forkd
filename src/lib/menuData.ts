@@ -329,7 +329,38 @@ const CUISINE_MENUS: Record<string, string[]> = {
     'Key Lime Pie', 'Carrot Cake', 'Bread Pudding', 'Molten Lava Cake',
     'Churros', 'Cannoli', 'Milkshake', 'Affogato',
   ],
+  steakhouse: [
+    'Ribeye', 'New York Strip', 'Filet Mignon', 'Sirloin Steak',
+    'Porterhouse', 'Prime Rib', 'T-Bone Steak', 'Steak & Shrimp',
+    'Grilled Chicken Breast', 'Baby Back Ribs', 'Grilled Salmon',
+    'Loaded Baked Potato', 'Steak Fries', 'Mac & Cheese',
+    'Caesar Salad', 'Wedge Salad', 'Onion Rings', 'Creamed Spinach',
+  ],
 }
+
+/**
+ * Cuisine hints found in restaurant names ("LongHorn Steakhouse", "Angelia's
+ * Pizza", "Pho Saigon"). Used when neither the chain list nor the Google
+ * cuisine type matched. Order matters — more specific terms first.
+ */
+const NAME_CUISINE_HINTS: [string, keyof typeof CUISINE_MENUS][] = [
+  ['steakhouse', 'steakhouse'], ['steak', 'steakhouse'], ['chophouse', 'steakhouse'],
+  ['pizzeria', 'pizza'], ['pizza', 'pizza'],
+  ['taqueria', 'mexican'], ['cantina', 'mexican'], ['taco', 'mexican'],
+  ['sushi', 'japanese'], ['ramen', 'japanese'], ['hibachi', 'japanese'], ['izakaya', 'japanese'],
+  ['pho', 'vietnamese'], ['banhmi', 'vietnamese'],
+  ['trattoria', 'italian'], ['ristorante', 'italian'], ['osteria', 'italian'], ['pasta', 'italian'],
+  ['barbecue', 'bbq'], ['barbeque', 'bbq'], ['bbq', 'bbq'], ['smokehouse', 'bbq'],
+  ['seafood', 'seafood'], ['oyster', 'seafood'], ['crab', 'seafood'], ['lobster', 'seafood'], ['fishhouse', 'seafood'],
+  ['burger', 'burgers'],
+  ['diner', 'breakfast'], ['pancake', 'breakfast'], ['waffle', 'breakfast'], ['brunch', 'breakfast'],
+  ['thai', 'thai'], ['curry', 'indian'], ['tandoor', 'indian'],
+  ['gyro', 'greek'], ['greek', 'greek'],
+  ['noodle', 'chinese'], ['wok', 'chinese'], ['dumpling', 'chinese'],
+  ['kbbq', 'korean'], ['korean', 'korean'],
+  ['creamery', 'dessert'], ['icecream', 'dessert'], ['gelato', 'dessert'], ['bakery', 'dessert'],
+  ['grill', 'american'], ['tavern', 'american'], ['pub', 'american'], ['roadhouse', 'american'],
+]
 
 /** Strip apostrophes, punctuation, and location suffixes, then lowercase. */
 function normalize(value: string): string {
@@ -411,11 +442,15 @@ export function chainDomain(placeName: string): string | null {
   return key ? CHAIN_DOMAINS[key] ?? null : null
 }
 
-/** Every known dish across all chain and cuisine banks, deduped and sorted. */
+/**
+ * Generic dishes across the cuisine banks, deduped and sorted. Deliberately
+ * excludes chain menus — branded items ("Chick-fil-A Chicken Sandwich")
+ * should never be suggested at another restaurant.
+ */
 const ALL_DISHES: string[] = (() => {
   const seen = new Set<string>()
   const out: string[] = []
-  for (const list of [...Object.values(CHAIN_MENUS), ...Object.values(CUISINE_MENUS)]) {
+  for (const list of Object.values(CUISINE_MENUS)) {
     for (const dish of list) {
       const key = dish.toLowerCase()
       if (!seen.has(key)) {
@@ -460,6 +495,18 @@ export function getMenuSuggestions(placeName: string, cuisineType: string): stri
     // "Italian Restaurant" or "italian_restaurant" both resolve to "italian".
     for (const key in CUISINE_MENUS) {
       if (cuisineKey.includes(key)) return CUISINE_MENUS[key]
+    }
+  }
+
+  // Google often tags places with a generic type, but the NAME usually says
+  // what kind of food it is ("LongHorn Steakhouse", "Angelia's Pizza").
+  if (placeName) {
+    const compactName = compact(placeName)
+    for (const [hint, bank] of NAME_CUISINE_HINTS) {
+      if (compactName.includes(hint)) return CUISINE_MENUS[bank]
+    }
+    for (const key in CUISINE_MENUS) {
+      if (compactName.includes(key)) return CUISINE_MENUS[key]
     }
   }
 
