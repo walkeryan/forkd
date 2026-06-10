@@ -52,7 +52,8 @@ export async function GET(req: Request, { params }: { params: { placeId: string 
 
   const uploadDir = process.env.UPLOAD_DIR ?? './uploads'
   const safeId = params.placeId.replace(/[^a-zA-Z0-9_-]/g, '')
-  const cacheRelative = path.join('marker-icons', `${safeId}-${status}.png`)
+  // v2: logo-first source priority (bump invalidates photo-first cache files).
+  const cacheRelative = path.join('marker-icons', `${safeId}-${status}-v2.png`)
   const cacheAbsolute = path.join(uploadDir, cacheRelative)
 
   const headers = { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=86400' }
@@ -63,20 +64,21 @@ export async function GET(req: Request, { params }: { params: { placeId: string 
     // Not cached yet — build it below.
   }
 
-  // Source image: cached place photo, else brand favicon fetched server-side.
+  // Source image: brand favicon first (matches PlaceAvatar's logo-first
+  // priority — chains show their logo), then the cached place photo.
   let src: Buffer | null = null
-  if (place.imagePath) {
-    try {
-      src = await readFile(path.join(uploadDir, place.imagePath))
-    } catch {
-      src = null
-    }
-  }
-  if (!src && place.website) {
+  if (place.website) {
     try {
       const domain = new URL(place.website.includes('://') ? place.website : `https://${place.website}`).hostname
       const res = await fetch(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`, { cache: 'no-store' })
       if (res.ok) src = Buffer.from(await res.arrayBuffer())
+    } catch {
+      src = null
+    }
+  }
+  if (!src && place.imagePath) {
+    try {
+      src = await readFile(path.join(uploadDir, place.imagePath))
     } catch {
       src = null
     }
