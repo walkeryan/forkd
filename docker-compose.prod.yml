@@ -15,7 +15,9 @@ services:
       - AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
       - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
       - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-      - DATABASE_URL=postgresql://tastelog:${POSTGRES_PASSWORD}@forkd-db:5432/tastelog
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # DATABASE_URL is constructed in docker-entrypoint.sh with encodeURIComponent
+      # so that base64 passwords containing '/' or '+' are handled correctly.
     depends_on:
       forkd-db:
         condition: service_healthy

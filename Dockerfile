@@ -27,7 +27,10 @@ RUN npm run build
 # ---- Stage 3: runner ----
 FROM node:20-alpine AS runner
 WORKDIR /app
-RUN apk add --no-cache libc6-compat
+# openssl is required by Prisma's schema engine binary (used by migrate deploy).
+# node:20-alpine pulls it as a Node.js dependency, but we pin it explicitly so
+# the version is guaranteed and the CLI is available for debugging.
+RUN apk add --no-cache libc6-compat openssl
 
 ENV NODE_ENV=production
 ENV PORT=3333
