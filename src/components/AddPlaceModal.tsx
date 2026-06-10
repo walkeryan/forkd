@@ -13,6 +13,28 @@ interface PlaceResult {
   placeType: string
   lat: number | null
   lng: number | null
+  photoReference: string | null
+}
+
+// Search-result thumbnail served through the cached preview proxy, falling
+// back to the generic pin while loading-less or on error.
+function ResultThumb({ place }: { place: PlaceResult }) {
+  const [failed, setFailed] = useState(false)
+  if (!place.photoReference || failed) {
+    return (
+      <div className="bg-orange-50 rounded-xl p-2 mt-0.5 flex-shrink-0">
+        <MapPin className="w-4 h-4 text-orange-500" />
+      </div>
+    )
+  }
+  return (
+    <img
+      src={`/api/places/preview-photo?placeId=${encodeURIComponent(place.googlePlaceId)}&ref=${encodeURIComponent(place.photoReference)}`}
+      alt=""
+      onError={() => setFailed(true)}
+      className="w-10 h-10 rounded-xl object-cover bg-gray-100 mt-0.5 flex-shrink-0"
+    />
+  )
 }
 
 interface Coords {
@@ -350,9 +372,7 @@ export default function AddPlaceModal({
                     disabled={creatingId !== null}
                     className="w-full text-left flex items-start gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-sm disabled:opacity-60"
                   >
-                    <div className="bg-orange-50 rounded-xl p-2 mt-0.5">
-                      <MapPin className="w-4 h-4 text-orange-500" />
-                    </div>
+                    <ResultThumb place={p} />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-gray-900 truncate">{p.name}</p>
                       {meta && <p className="text-xs text-gray-500 mt-0.5">{meta}</p>}

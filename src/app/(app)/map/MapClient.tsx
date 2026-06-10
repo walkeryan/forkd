@@ -7,6 +7,7 @@ import { cuisineChip } from '@/lib/places'
 
 export interface MapPlace {
   id: string
+  placeId: string
   name: string
   lat: number
   lng: number
@@ -15,12 +16,24 @@ export interface MapPlace {
   cuisine: string | null
   visitCount: number
   status: 'visited' | 'wishlist'
+  website: string | null
+  imagePath: string | null
 }
 
 const containerStyle = { width: '100%', height: '100%' }
 
 const VISITED_COLOR = '#f97316'
 const WISHLIST_COLOR = '#3b82f6'
+
+/** Brand favicon for a place website (matches PlaceAvatar's logo source). */
+function faviconUrl(website: string): string | null {
+  try {
+    const domain = new URL(website.includes('://') ? website : `https://${website}`).hostname
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`
+  } catch {
+    return null
+  }
+}
 
 export default function MapClient({ places, center }: { places: MapPlace[]; center: { lat: number; lng: number } }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
@@ -51,12 +64,25 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
     }
   }, [loadError])
 
-  // Coloured pin built from the SDK's Symbol API once google is available.
-  const iconFor = useCallback((status: MapPlace['status']) => {
+  // Marker icon: the place's cached photo, else its brand favicon, else a
+  // coloured circle keyed to visited/wishlist status.
+  const iconFor = useCallback((p: MapPlace) => {
     if (typeof google === 'undefined') return undefined
+    const imageUrl = p.imagePath
+      ? `/api/place-images/${p.placeId}`
+      : p.website
+        ? faviconUrl(p.website)
+        : null
+    if (imageUrl) {
+      return {
+        url: imageUrl,
+        scaledSize: new google.maps.Size(34, 34),
+        anchor: new google.maps.Point(17, 17),
+      }
+    }
     return {
       path: google.maps.SymbolPath.CIRCLE,
-      fillColor: status === 'visited' ? VISITED_COLOR : WISHLIST_COLOR,
+      fillColor: p.status === 'visited' ? VISITED_COLOR : WISHLIST_COLOR,
       fillOpacity: 1,
       strokeColor: '#ffffff',
       strokeWeight: 2,
@@ -103,7 +129,7 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
         <MarkerF
           key={`${p.status}-${p.id}`}
           position={{ lat: p.lat, lng: p.lng }}
-          icon={iconFor(p.status)}
+          icon={iconFor(p)}
           onClick={() => setSelected(p)}
         />
       ))}

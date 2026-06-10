@@ -28,6 +28,7 @@ export default async function MapPage() {
       .filter((up) => up.place.lat != null && up.place.lng != null)
       .map((up) => ({
         id: up.id,
+        placeId: up.place.id,
         name: up.place.name,
         lat: up.place.lat as number,
         lng: up.place.lng as number,
@@ -36,11 +37,14 @@ export default async function MapPage() {
         cuisine: up.place.cuisine,
         visitCount: up._count.visits,
         status: 'visited' as const,
+        website: up.place.website,
+        imagePath: up.place.imagePath,
       })),
     ...wishlist
       .filter((w) => w.place.lat != null && w.place.lng != null)
       .map((w) => ({
         id: w.id,
+        placeId: w.place.id,
         name: w.place.name,
         lat: w.place.lat as number,
         lng: w.place.lng as number,
@@ -49,6 +53,8 @@ export default async function MapPage() {
         cuisine: w.place.cuisine,
         visitCount: 0,
         status: 'wishlist' as const,
+        website: w.place.website,
+        imagePath: w.place.imagePath,
       })),
   ]
 

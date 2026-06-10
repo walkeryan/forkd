@@ -9,6 +9,7 @@ export interface NearbyPlace {
   placeType: string
   lat: number | null
   lng: number | null
+  photoReference: string | null
 }
 
 interface GooglePlaceGeometry {
@@ -26,6 +27,7 @@ export interface GooglePlace {
   geometry: GooglePlaceGeometry
   types?: string[]
   business_status?: string
+  photos?: { photo_reference: string }[]
 }
 
 // Map a Google place type (e.g. "ramen_restaurant") to a food emoji. The first
@@ -75,5 +77,6 @@ export function normalizeGooglePlace(result: GooglePlace): NearbyPlace {
     placeType: result.types?.[0] ?? 'restaurant',
     lat: result.geometry.location.lat,
     lng: result.geometry.location.lng,
+    photoReference: result.photos?.[0]?.photo_reference ?? null,
   }
 }

@@ -1,18 +1,71 @@
-// Server-side place enrichment: fetch the website and one representative
-// photo for a Google place, cache the photo to the uploads volume, and save
-// both on the Place row. Runs best-effort at place-creation time — failures
-// are logged and swallowed so they never block adding a place.
+// Server-side place enrichment + Google Places photo caching.
+//
+// Two caches live in the uploads volume:
+//   place-previews/<googlePlaceId>.webp — small thumbnails for search results
+//   place-images/<placeId>.webp         — the saved photo for tracked places
+//
+// Every Google photo is fetched at most once; search previews are reused when
+// a place is later added, so the add flow usually costs zero photo requests.
 import { prisma } from '@/lib/prisma'
-import { mkdir } from 'fs/promises'
+import { copyFile, mkdir, access } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
 
 const DETAILS_ENDPOINT = 'https://maps.googleapis.com/maps/api/place/details/json'
 const PHOTO_ENDPOINT = 'https://maps.googleapis.com/maps/api/place/photo'
 
-interface PlaceDetailsResult {
-  website?: string
-  photos?: { photo_reference: string }[]
+function uploadDir(): string {
+  return process.env.UPLOAD_DIR ?? './uploads'
+}
+
+/** Google place ids are URL-safe, but never trust them as raw filenames. */
+function safeName(id: string): string {
+  return id.replace(/[^a-zA-Z0-9_-]/g, '')
+}
+
+/** Relative cache path for a search-result preview thumbnail. */
+export function previewCachePath(googlePlaceId: string): string {
+  return path.join('place-previews', `${safeName(googlePlaceId)}.webp`)
+}
+
+async function fileExists(relativePath: string): Promise<boolean> {
+  try {
+    await access(path.join(uploadDir(), relativePath))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Download a Places photo, convert to webp, store at the relative path. */
+export async function fetchAndCachePhoto(
+  photoReference: string,
+  apiKey: string,
+  relativePath: string,
+  maxWidth: number,
+): Promise<boolean> {
+  try {
+    const url = new URL(PHOTO_ENDPOINT)
+    url.searchParams.set('maxwidth', String(maxWidth))
+    url.searchParams.set('photo_reference', photoReference)
+    url.searchParams.set('key', apiKey)
+
+    // The photo endpoint 302s to the actual image; fetch follows it.
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) return false
+    const buffer = Buffer.from(await res.arrayBuffer())
+
+    const absolute = path.join(uploadDir(), relativePath)
+    await mkdir(path.dirname(absolute), { recursive: true })
+    await sharp(buffer)
+      .resize(maxWidth, maxWidth, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toFile(absolute)
+    return true
+  } catch (err) {
+    console.error('fetchAndCachePhoto failed:', err)
+    return false
+  }
 }
 
 /**
@@ -29,25 +82,40 @@ export async function enrichPlace(placeId: string): Promise<void> {
     if (!place?.googlePlaceId) return
     if (place.website && place.imagePath) return
 
-    const url = new URL(DETAILS_ENDPOINT)
-    url.searchParams.set('place_id', place.googlePlaceId)
-    url.searchParams.set('fields', 'website,photos')
-    url.searchParams.set('key', apiKey)
-
-    const res = await fetch(url, { cache: 'no-store' })
-    if (!res.ok) return
-    const data = await res.json()
-    const result: PlaceDetailsResult = data.result ?? {}
-
     const updates: { website?: string; imagePath?: string } = {}
+    const imageRelative = path.join('place-images', `${safeName(placeId)}.webp`)
 
-    if (!place.website && result.website) {
-      updates.website = result.website
+    // A search preview cached for this google place doubles as the saved
+    // image — avatars render at ≤64px, so the 240px preview is plenty.
+    if (!place.imagePath) {
+      const preview = previewCachePath(place.googlePlaceId)
+      if (await fileExists(preview)) {
+        const absolute = path.join(uploadDir(), imageRelative)
+        await mkdir(path.dirname(absolute), { recursive: true })
+        await copyFile(path.join(uploadDir(), preview), absolute)
+        updates.imagePath = imageRelative
+      }
     }
 
-    if (!place.imagePath && result.photos?.[0]?.photo_reference) {
-      const imagePath = await cachePlacePhoto(placeId, result.photos[0].photo_reference, apiKey)
-      if (imagePath) updates.imagePath = imagePath
+    if (!place.website || (!place.imagePath && !updates.imagePath)) {
+      const url = new URL(DETAILS_ENDPOINT)
+      url.searchParams.set('place_id', place.googlePlaceId)
+      url.searchParams.set('fields', 'website,photos')
+      url.searchParams.set('key', apiKey)
+
+      const res = await fetch(url, { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        const result: { website?: string; photos?: { photo_reference: string }[] } = data.result ?? {}
+
+        if (!place.website && result.website) {
+          updates.website = result.website
+        }
+        if (!place.imagePath && !updates.imagePath && result.photos?.[0]?.photo_reference) {
+          const ok = await fetchAndCachePhoto(result.photos[0].photo_reference, apiKey, imageRelative, 800)
+          if (ok) updates.imagePath = imageRelative
+        }
+      }
     }
 
     if (Object.keys(updates).length > 0) {
@@ -55,35 +123,5 @@ export async function enrichPlace(placeId: string): Promise<void> {
     }
   } catch (err) {
     console.error('enrichPlace failed:', err)
-  }
-}
-
-/** Download a Places photo and store it as webp; returns the relative path. */
-async function cachePlacePhoto(placeId: string, photoReference: string, apiKey: string): Promise<string | null> {
-  try {
-    const url = new URL(PHOTO_ENDPOINT)
-    url.searchParams.set('maxwidth', '800')
-    url.searchParams.set('photo_reference', photoReference)
-    url.searchParams.set('key', apiKey)
-
-    // The photo endpoint 302s to the actual image; fetch follows it.
-    const res = await fetch(url, { cache: 'no-store' })
-    if (!res.ok) return null
-    const buffer = Buffer.from(await res.arrayBuffer())
-
-    const uploadDir = process.env.UPLOAD_DIR ?? './uploads'
-    const folder = path.join(uploadDir, 'place-images')
-    await mkdir(folder, { recursive: true })
-
-    const relativePath = path.join('place-images', `${placeId}.webp`)
-    await sharp(buffer)
-      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toFile(path.join(uploadDir, relativePath))
-
-    return relativePath
-  } catch (err) {
-    console.error('cachePlacePhoto failed:', err)
-    return null
   }
 }
