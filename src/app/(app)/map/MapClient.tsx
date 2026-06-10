@@ -25,16 +25,6 @@ const containerStyle = { width: '100%', height: '100%' }
 const VISITED_COLOR = '#f97316'
 const WISHLIST_COLOR = '#0d9488'
 
-/** Brand favicon for a place website (matches PlaceAvatar's logo source). */
-function faviconUrl(website: string): string | null {
-  try {
-    const domain = new URL(website.includes('://') ? website : `https://${website}`).hostname
-    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`
-  } catch {
-    return null
-  }
-}
-
 export default function MapClient({ places, center }: { places: MapPlace[]; center: { lat: number; lng: number } }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
   const { isLoaded, loadError } = useJsApiLoader({
@@ -64,20 +54,15 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
     }
   }, [loadError])
 
-  // Marker icon: the place's cached photo, else its brand favicon, else a
-  // coloured circle keyed to visited/wishlist status.
+  // Marker icon: a server-rendered circular badge (place photo or brand
+  // favicon inside a white ring). Places with neither get a coloured dot.
   const iconFor = useCallback((p: MapPlace) => {
     if (typeof google === 'undefined') return undefined
-    const imageUrl = p.imagePath
-      ? `/api/place-images/${p.placeId}`
-      : p.website
-        ? faviconUrl(p.website)
-        : null
-    if (imageUrl) {
+    if (p.imagePath || p.website) {
       return {
-        url: imageUrl,
-        scaledSize: new google.maps.Size(34, 34),
-        anchor: new google.maps.Point(17, 17),
+        url: `/api/map-markers/${p.placeId}?c=${p.status}`,
+        scaledSize: new google.maps.Size(36, 36),
+        anchor: new google.maps.Point(18, 18),
       }
     }
     return {
