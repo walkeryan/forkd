@@ -25,10 +25,10 @@ export default function StarRating({ value, onChange, readonly = false, size = '
           onClick={() => onChange?.(n)}
           onMouseEnter={() => !readonly && setHover(n)}
           onMouseLeave={() => !readonly && setHover(null)}
-          className={readonly ? 'cursor-default' : 'cursor-pointer'}
+          className={readonly ? 'cursor-default' : 'cursor-pointer active:scale-110 transition-transform'}
         >
           <Star
-            className={`${sz} ${display >= n ? 'fill-orange-500 text-orange-500' : 'text-gray-300'} transition-colors`}
+            className={`${sz} ${display >= n ? 'fill-orange-500 text-orange-500' : 'text-stone-300'} transition-colors`}
           />
         </button>
       ))}

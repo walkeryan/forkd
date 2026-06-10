@@ -23,7 +23,7 @@ export interface MapPlace {
 const containerStyle = { width: '100%', height: '100%' }
 
 const VISITED_COLOR = '#f97316'
-const WISHLIST_COLOR = '#3b82f6'
+const WISHLIST_COLOR = '#0d9488'
 
 /** Brand favicon for a place website (matches PlaceAvatar's logo source). */
 function faviconUrl(website: string): string | null {
@@ -149,7 +149,7 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
                 ) : null
               })()}
               {selected.status === 'wishlist' && (
-                <span className="text-[11px] text-blue-600 font-medium">Wishlist</span>
+                <span className="text-[11px] text-teal-600 font-medium">Wishlist</span>
               )}
               {selected.rating != null && (
                 <span className="inline-flex items-center gap-0.5 text-orange-500 text-[11px] font-semibold">

@@ -2,15 +2,21 @@ import { signIn } from '@/auth'
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm text-center">
-        <div className="text-5xl mb-4">🍽️</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Fork&apos;d</h1>
-        <p className="text-gray-500 mb-8 text-sm">Track your favorite places & meals</p>
+    <div className="min-h-screen flex items-center justify-center px-4 bg-app relative overflow-hidden">
+      {/* Decorative warm blobs behind the card */}
+      <div aria-hidden className="absolute -top-24 -right-20 w-72 h-72 rounded-full bg-gradient-to-br from-orange-300/40 to-amber-200/40 blur-3xl" />
+      <div aria-hidden className="absolute -bottom-24 -left-20 w-72 h-72 rounded-full bg-gradient-to-tr from-amber-300/30 to-orange-200/30 blur-3xl" />
+
+      <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-orange-900/5 border border-white/60 p-8 w-full max-w-sm text-center">
+        <div className="mx-auto mb-5 w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30 flex items-center justify-center text-3xl">
+          🍴
+        </div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-stone-900 mb-2">Fork&apos;d</h1>
+        <p className="text-stone-500 mb-8 text-sm">Track your favorite places & meals</p>
         <form action={async () => { 'use server'; await signIn('google', { redirectTo: '/places' }) }}>
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 font-medium hover:bg-gray-50 transition shadow-sm"
+            className="w-full flex items-center justify-center gap-3 bg-white border border-stone-200 rounded-2xl px-4 py-3.5 text-stone-700 font-medium shadow-sm hover:shadow-md hover:bg-stone-50 active:scale-[0.98] transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -21,6 +27,7 @@ export default function SignInPage() {
             Continue with Google
           </button>
         </form>
+        <p className="mt-6 text-xs text-stone-400">Your personal food journal 🧡</p>
       </div>
     </div>
   )

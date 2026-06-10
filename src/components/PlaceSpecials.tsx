@@ -102,9 +102,9 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
   }
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+    <div className="card p-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 font-medium text-gray-700">
+        <div className="flex items-center gap-2 font-medium text-stone-700">
           <CalendarClock className="w-4 h-4" />
           <span>Specials ({list.length})</span>
         </div>
@@ -121,7 +121,7 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
           <select
             value={form.type}
             onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm bg-white placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
           >
             {SPECIAL_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -133,7 +133,7 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
             placeholder="Title * (e.g. Half-price wings)"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
           />
           <div className="flex flex-wrap gap-1.5">
             {DAYS.map((d) => (
@@ -141,7 +141,7 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
                 key={d.value}
                 type="button"
                 onClick={() => setForm((f) => ({ ...f, dayOfWeek: d.value }))}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${form.dayOfWeek === d.value ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-500 bg-white'}`}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${form.dayOfWeek === d.value ? 'bg-orange-500 text-white border-orange-500' : 'border-stone-200 text-stone-500 bg-white'}`}
               >
                 {d.label}
               </button>
@@ -149,28 +149,28 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
             <button
               type="button"
               onClick={() => setForm((f) => ({ ...f, dayOfWeek: null }))}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${form.dayOfWeek === null ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-500 bg-white'}`}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${form.dayOfWeek === null ? 'bg-orange-500 text-white border-orange-500' : 'border-stone-200 text-stone-500 bg-white'}`}
             >
               Varies
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <label className="flex-1 text-xs text-gray-500">
+            <label className="flex-1 text-xs text-stone-500">
               Start
               <input
                 type="time"
                 value={form.startTime}
                 onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-                className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="mt-1 w-full border border-stone-200 rounded-lg px-2 py-1.5 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
               />
             </label>
-            <label className="flex-1 text-xs text-gray-500">
+            <label className="flex-1 text-xs text-stone-500">
               End
               <input
                 type="time"
                 value={form.endTime}
                 onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-                className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="mt-1 w-full border border-stone-200 rounded-lg px-2 py-1.5 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
               />
             </label>
           </div>
@@ -179,14 +179,14 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             placeholder="Description (optional)"
             rows={2}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
           />
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => { setShowForm(false); setForm(EMPTY_FORM) }}
               disabled={saving}
-              className="flex-1 border border-gray-200 text-gray-500 rounded-lg py-2 text-sm font-medium disabled:opacity-50"
+              className="flex-1 border border-stone-200 text-stone-500 rounded-lg py-2 text-sm font-medium disabled:opacity-50"
             >
               Cancel
             </button>
@@ -194,7 +194,7 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
               type="button"
               onClick={add}
               disabled={saving || !form.title.trim()}
-              className="flex-1 bg-orange-500 text-white rounded-lg py-2 text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 bg-gradient-to-b from-orange-500 to-orange-600 text-white rounded-lg py-2 text-sm font-semibold shadow-sm shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Save
@@ -204,21 +204,21 @@ export default function PlaceSpecials({ userPlaceId, initial }: { userPlaceId: s
       )}
 
       {list.length === 0 ? (
-        <p className="text-sm text-gray-400">No specials yet — tap Add Special to add one</p>
+        <p className="text-sm text-stone-400">No specials yet — tap Add Special to add one</p>
       ) : (
         <div className="space-y-2">
           {list.map((s) => (
-            <div key={s.id} className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
-              <span className="text-xl leading-none mt-0.5">{emojiFor(s.type)}</span>
+            <div key={s.id} className="flex items-start gap-3 bg-stone-50 border border-stone-200/50 rounded-xl p-3">
+              <span className="w-9 h-9 rounded-lg bg-white shadow-sm flex items-center justify-center text-lg flex-shrink-0">{emojiFor(s.type)}</span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-800">{s.title}</p>
+                <p className="text-sm font-semibold text-stone-800">{s.title}</p>
                 <p className="text-xs text-orange-500 font-medium">{whenLabel(s)}</p>
-                {s.description && <p className="text-xs text-gray-500 mt-0.5">{s.description}</p>}
+                {s.description && <p className="text-xs text-stone-500 mt-0.5">{s.description}</p>}
               </div>
               <button
                 onClick={() => remove(s.id)}
                 aria-label="Delete special"
-                className="text-gray-300 hover:text-red-500 p-0.5 flex-shrink-0"
+                className="text-stone-300 hover:text-red-500 p-0.5 flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>

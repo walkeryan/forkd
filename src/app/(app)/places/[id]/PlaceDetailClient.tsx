@@ -174,19 +174,19 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
       {/* Back navigation */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-1 text-sm text-gray-500 -ml-1 active:text-gray-700"
+        className="inline-flex items-center gap-1 text-sm font-medium text-stone-500 bg-white/70 border border-stone-200/60 rounded-full pl-2 pr-3 py-1.5 shadow-sm active:scale-95 transition"
       >
         <ArrowLeft className="w-4 h-4" /> My Places
       </button>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="card p-4 bg-gradient-to-br from-white to-orange-50/60 flex items-start justify-between gap-2">
         <div className="flex items-start gap-3 min-w-0">
           <PlaceAvatar place={place} size="lg" />
           <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-gray-900">{place.name}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-stone-900">{place.name}</h1>
           {place.city && (
-            <div className="flex items-center gap-1 text-gray-400 mt-1 text-sm">
+            <div className="flex items-center gap-1 text-stone-400 mt-1 text-sm">
               <MapPin className="w-4 h-4" />
               <span>{place.city}{place.state ? `, ${place.state}` : ''}</span>
             </div>
@@ -194,7 +194,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
           {(() => {
             const chip = cuisineChip(place.cuisine)
             return chip ? (
-              <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs mt-2">
+              <span className="inline-flex items-center gap-1 bg-stone-100 text-stone-600 rounded-full px-2 py-0.5 text-xs mt-2">
                 <span>{chip.emoji}</span>{chip.label}
               </span>
             ) : null
@@ -205,14 +205,14 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
           <button
             onClick={() => setMenuOpen(v => !v)}
             aria-label="Place options"
-            className="text-gray-400 p-2 -mr-2 rounded-full active:bg-gray-100"
+            className="text-stone-400 p-2 -mr-2 rounded-full active:bg-stone-100"
           >
             <MoreVertical className="w-5 h-5" />
           </button>
           {menuOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 top-full z-20 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1">
+              <div className="absolute right-0 top-full z-20 mt-1 w-44 bg-white rounded-xl shadow-lg border border-stone-200/60 py-1">
                 <button
                   onClick={() => { setMenuOpen(false); setConfirmDelete(true) }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 active:bg-red-50"
@@ -226,35 +226,35 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
       </div>
 
       {/* Rating card */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p className="text-sm font-medium text-gray-600 mb-2">Your Rating</p>
+      <div className="card p-4">
+        <p className="text-sm font-medium text-stone-600 mb-2">Your Rating</p>
         <StarRating value={rating} onChange={saveRating} size="lg" />
         <div className="flex gap-2 mt-3">
           {[1,2,3,4].map(p => (
             <button key={p} onClick={() => setPriceRange(p)}
-              className={`px-3 py-1 rounded-lg text-sm font-medium border transition ${priceRange === p ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-500'}`}>
+              className={`px-3 py-1 rounded-lg text-sm font-medium border active:scale-95 transition ${priceRange === p ? 'bg-gradient-to-b from-orange-500 to-orange-600 text-white border-orange-500 shadow-sm shadow-orange-500/20' : 'border-stone-200 text-stone-500 bg-white/70'}`}>
               {'$'.repeat(p)}
             </button>
           ))}
         </div>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes about this place..."
-          rows={2} className="w-full mt-3 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+          rows={2} className="w-full mt-3 bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow" />
         <button onClick={saveDetails} disabled={saving}
-          className="mt-2 w-full bg-gray-100 text-gray-700 rounded-xl py-2 text-sm font-medium disabled:opacity-50">
+          className="mt-2 w-full bg-white border border-stone-200 text-stone-700 shadow-sm rounded-xl py-2 text-sm font-medium active:bg-stone-50 transition disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Notes'}
         </button>
       </div>
 
       {/* Tags card */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <div className="flex items-center gap-2 font-medium text-gray-700 mb-3">
-          <TagIcon className="w-4 h-4" />
+      <div className="card p-4">
+        <div className="flex items-center gap-2 font-semibold text-stone-800 mb-3">
+          <span className="w-8 h-8 rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center"><TagIcon className="w-4 h-4" /></span>
           <span>Tags</span>
         </div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {tags.map((t: PlaceTagWithTag) => (
-              <span key={t.tag.id} className="flex items-center gap-1 bg-orange-50 text-orange-600 rounded-full pl-3 pr-1.5 py-1 text-xs font-medium">
+              <span key={t.tag.id} className="flex items-center gap-1 bg-orange-100/70 text-orange-600 rounded-full pl-3 pr-1.5 py-1 text-xs font-medium">
                 {t.tag.name}
                 <button onClick={() => removeTag(t.tag.id)} aria-label={`Remove ${t.tag.name}`} className="hover:bg-orange-100 rounded-full p-0.5">
                   <X className="w-3 h-3" />
@@ -269,7 +269,7 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
             onChange={(e) => setTagInput(e.target.value)}
             list="tag-suggestions"
             placeholder="Add a tag…"
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
           />
           <datalist id="tag-suggestions">
             {suggestions.map((t) => <option key={t.id} value={t.name} />)}
@@ -281,18 +281,18 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
       </div>
 
       {/* Meals card */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div className="card p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 font-medium text-gray-700">
-            <UtensilsCrossed className="w-4 h-4" />
+          <div className="flex items-center gap-2 font-semibold text-stone-800">
+            <span className="w-8 h-8 rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center"><UtensilsCrossed className="w-4 h-4" /></span>
             <span>Meals ({meals.length})</span>
           </div>
-          <button onClick={() => setShowMealForm(v => !v)} className="text-orange-500">
+          <button onClick={() => setShowMealForm(v => !v)} aria-label="Toggle meal form" className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-100/70 text-orange-600 active:scale-90 transition-transform">
             {showMealForm ? <ChevronUp className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
           </button>
         </div>
         {showMealForm && (
-          <div className="mb-3 bg-orange-50 rounded-xl p-3">
+          <div className="mb-3 bg-orange-50/70 border border-orange-100 rounded-xl p-3">
             <MealForm
               userPlaceId={userPlace.id}
               placeName={place.name}
@@ -305,34 +305,34 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
           </div>
         )}
         {meals.length === 0 ? (
-          <p className="text-sm text-gray-400">No meals added yet — tap + to add one</p>
+          <p className="text-sm text-stone-400">No meals added yet — tap + to add one</p>
         ) : (
           <div className="space-y-2">
             {meals.map((meal: MealWithRelations) => (
               editingMealId === meal.id ? (
-                <div key={meal.id} className="space-y-2 bg-orange-50 rounded-xl p-3">
+                <div key={meal.id} className="space-y-2 bg-orange-50/70 border border-orange-100 rounded-xl p-3">
                   <input value={editMeal.name} onChange={e => setEditMeal(m => ({ ...m, name: e.target.value }))} placeholder="Meal name *"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow" />
                   <input value={editMeal.description} onChange={e => setEditMeal(m => ({ ...m, description: e.target.value }))} placeholder="Description (optional)"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow" />
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Rating</span>
+                    <span className="text-xs text-stone-500">Rating</span>
                     <StarRating value={editMeal.rating} onChange={r => setEditMeal(m => ({ ...m, rating: r }))} size="sm" />
                   </div>
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-stone-600 cursor-pointer">
                     <input type="checkbox" checked={editMeal.isFavorite} onChange={e => setEditMeal(m => ({ ...m, isFavorite: e.target.checked }))} className="accent-orange-500" />
                     Mark as favorite
                   </label>
                   <div className="flex gap-2">
-                    <button onClick={() => setEditingMealId(null)} className="flex-1 border border-gray-200 text-gray-500 rounded-lg py-2 text-sm font-medium">Cancel</button>
-                    <button onClick={() => saveMealEdit(meal.id)} className="flex-1 bg-orange-500 text-white rounded-lg py-2 text-sm font-medium flex items-center justify-center gap-1"><Check className="w-4 h-4" /> Save</button>
+                    <button onClick={() => setEditingMealId(null)} className="flex-1 border border-stone-200 text-stone-500 rounded-lg py-2 text-sm font-medium">Cancel</button>
+                    <button onClick={() => saveMealEdit(meal.id)} className="flex-1 bg-gradient-to-b from-orange-500 to-orange-600 text-white rounded-lg py-2 text-sm font-semibold shadow-sm shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-1"><Check className="w-4 h-4" /> Save</button>
                   </div>
                 </div>
               ) : (
                 <div key={meal.id} className="flex items-start justify-between gap-2 group">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-medium text-gray-800">{meal.name}</p>
+                      <p className="text-sm font-medium text-stone-800">{meal.name}</p>
                       {meal.isFavorite && <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400 flex-shrink-0" />}
                       {meal.rating != null && (
                         <span className="flex items-center gap-0.5 text-xs text-orange-500 font-medium">
@@ -340,26 +340,26 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
                         </span>
                       )}
                       {meal.serviceRating != null && (
-                        <span className="flex items-center gap-0.5 text-xs text-gray-400 font-medium">
-                          Service <Star className="w-3 h-3 fill-gray-400 text-gray-400" />{meal.serviceRating}
+                        <span className="flex items-center gap-0.5 text-xs text-stone-400 font-medium">
+                          Service <Star className="w-3 h-3 fill-gray-400 text-stone-400" />{meal.serviceRating}
                         </span>
                       )}
                     </div>
-                    {meal.description && <p className="text-xs text-gray-400">{meal.description}</p>}
-                    {meal.notes && <p className="text-xs text-gray-400">{meal.notes}</p>}
-                    {meal.serviceNotes && <p className="text-xs text-gray-400"><span className="text-gray-500 font-medium">Service:</span> {meal.serviceNotes}</p>}
-                    {meal.managementNotes && <p className="text-xs text-gray-400"><span className="text-gray-500 font-medium">Atmosphere:</span> {meal.managementNotes}</p>}
+                    {meal.description && <p className="text-xs text-stone-400">{meal.description}</p>}
+                    {meal.notes && <p className="text-xs text-stone-400">{meal.notes}</p>}
+                    {meal.serviceNotes && <p className="text-xs text-stone-400"><span className="text-stone-500 font-medium">Service:</span> {meal.serviceNotes}</p>}
+                    {meal.managementNotes && <p className="text-xs text-stone-400"><span className="text-stone-500 font-medium">Atmosphere:</span> {meal.managementNotes}</p>}
                     {meal.photos.length > 0 && (
                       <div className="flex gap-1.5 mt-1.5">
                         {meal.photos.map((p) => (
-                          <img key={p.id} src={`/api/photos/${p.id}`} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
+                          <img key={p.id} src={`/api/photos/${p.id}`} alt="" className="w-12 h-12 rounded-lg object-cover bg-stone-100" />
                         ))}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => startEditMeal(meal)} aria-label="Edit meal" className="text-gray-300 hover:text-gray-500 p-1"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => deleteMeal(meal.id)} aria-label="Delete meal" className="text-gray-300 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => startEditMeal(meal)} aria-label="Edit meal" className="text-stone-300 hover:text-stone-500 p-1"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => deleteMeal(meal.id)} aria-label="Delete meal" className="text-stone-300 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               )
@@ -372,65 +372,65 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
       <PlaceSpecials userPlaceId={userPlace.id} initial={specials} />
 
       {/* Visits card */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div className="card p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 font-medium text-gray-700">
-            <Calendar className="w-4 h-4" />
+          <div className="flex items-center gap-2 font-semibold text-stone-800">
+            <span className="w-8 h-8 rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center"><Calendar className="w-4 h-4" /></span>
             <span>Visits ({visits.length})</span>
           </div>
-          <button onClick={() => setShowVisitForm(v => !v)} className="text-orange-500">
+          <button onClick={() => setShowVisitForm(v => !v)} aria-label="Toggle visit form" className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-100/70 text-orange-600 active:scale-90 transition-transform">
             {showVisitForm ? <ChevronUp className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
           </button>
         </div>
         {showVisitForm && (
-          <div className="mb-3 space-y-2 bg-orange-50 rounded-xl p-3">
+          <div className="mb-3 space-y-2 bg-orange-50/70 border border-orange-100 rounded-xl p-3">
             <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow" />
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Rating</span>
+              <span className="text-xs text-stone-500">Rating</span>
               <StarRating value={visitRating} onChange={setVisitRating} size="sm" />
             </div>
             <textarea value={visitNotes} onChange={e => setVisitNotes(e.target.value)} placeholder="How was it? (optional)"
-              rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            <button onClick={logVisit} className="w-full bg-orange-500 text-white rounded-lg py-2 text-sm font-medium">Log Visit</button>
+              rows={2} className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow" />
+            <button onClick={logVisit} className="w-full bg-gradient-to-b from-orange-500 to-orange-600 text-white rounded-lg py-2 text-sm font-semibold shadow-sm shadow-orange-500/20 active:scale-[0.98] transition-all">Log Visit</button>
           </div>
         )}
         {visits.length === 0 ? (
-          <p className="text-sm text-gray-400">No visits logged — tap + to log one</p>
+          <p className="text-sm text-stone-400">No visits logged — tap + to log one</p>
         ) : (
           <div className="space-y-2">
             {visits.map((v: VisitWithRelations) => (
               editingVisitId === v.id ? (
-                <div key={v.id} className="space-y-2 bg-orange-50 rounded-xl p-3">
+                <div key={v.id} className="space-y-2 bg-orange-50/70 border border-orange-100 rounded-xl p-3">
                   <input type="date" value={editVisit.visitedAt} onChange={e => setEditVisit(s => ({ ...s, visitedAt: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow" />
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Rating</span>
+                    <span className="text-xs text-stone-500">Rating</span>
                     <StarRating value={editVisit.rating} onChange={r => setEditVisit(s => ({ ...s, rating: r }))} size="sm" />
                   </div>
                   <textarea value={editVisit.notes} onChange={e => setEditVisit(s => ({ ...s, notes: e.target.value }))} placeholder="How was it? (optional)" rows={2}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow" />
                   <div className="flex gap-2">
-                    <button onClick={() => setEditingVisitId(null)} className="flex-1 border border-gray-200 text-gray-500 rounded-lg py-2 text-sm font-medium">Cancel</button>
-                    <button onClick={() => saveVisitEdit(v.id)} className="flex-1 bg-orange-500 text-white rounded-lg py-2 text-sm font-medium flex items-center justify-center gap-1"><Check className="w-4 h-4" /> Save</button>
+                    <button onClick={() => setEditingVisitId(null)} className="flex-1 border border-stone-200 text-stone-500 rounded-lg py-2 text-sm font-medium">Cancel</button>
+                    <button onClick={() => saveVisitEdit(v.id)} className="flex-1 bg-gradient-to-b from-orange-500 to-orange-600 text-white rounded-lg py-2 text-sm font-semibold shadow-sm shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-1"><Check className="w-4 h-4" /> Save</button>
                   </div>
                 </div>
               ) : (
                 <div key={v.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0 text-sm">
                     <div className="flex items-center gap-2">
-                      <p className="text-gray-700 font-medium">{new Date(v.visitedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      <p className="text-stone-700 font-medium">{new Date(v.visitedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                       {v.rating != null && (
                         <span className="flex items-center gap-0.5 text-xs text-orange-500 font-medium">
                           <Star className="w-3 h-3 fill-orange-500" />{v.rating.toFixed(1)}
                         </span>
                       )}
                     </div>
-                    {v.notes && <p className="text-gray-400 text-xs">{v.notes}</p>}
+                    {v.notes && <p className="text-stone-400 text-xs">{v.notes}</p>}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => startEditVisit(v)} aria-label="Edit visit" className="text-gray-300 hover:text-gray-500 p-1"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => deleteVisit(v.id)} aria-label="Delete visit" className="text-gray-300 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => startEditVisit(v)} aria-label="Edit visit" className="text-stone-300 hover:text-stone-500 p-1"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => deleteVisit(v.id)} aria-label="Delete visit" className="text-stone-300 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               )
@@ -440,23 +440,23 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
       </div>
 
       {/* Photos card */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div className="card p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 font-medium text-gray-700">
-            <Camera className="w-4 h-4" />
+          <div className="flex items-center gap-2 font-semibold text-stone-800">
+            <span className="w-8 h-8 rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center"><Camera className="w-4 h-4" /></span>
             <span>Photos ({photos.length})</span>
           </div>
-          <label className="cursor-pointer text-orange-500">
-            {uploadingPhoto ? <span className="text-xs">Uploading...</span> : <Plus className="w-5 h-5" />}
+          <label className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-full bg-orange-100/70 text-orange-600 active:scale-90 transition-transform">
+            {uploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-5 h-5" />}
             <input type="file" accept="image/*" capture="environment" className="hidden" onChange={uploadPhoto} />
           </label>
         </div>
         {photos.length === 0 ? (
-          <p className="text-sm text-gray-400">No photos yet — tap + to add one</p>
+          <p className="text-sm text-stone-400">No photos yet — tap + to add one</p>
         ) : (
           <div className="grid grid-cols-3 gap-1.5">
             {photos.map((photo, i) => (
-              <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
+              <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-stone-100">
                 <button type="button" onClick={() => setLightboxIndex(i)} className="block w-full h-full" aria-label="View photo">
                   <img src={`/api/photos/${photo.id}`} alt={photo.caption ?? ''} className="w-full h-full object-cover" />
                 </button>
@@ -477,17 +477,17 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
       {/* Remove-place confirmation */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-          <div className="absolute inset-0 bg-black/40" onClick={() => !deleting && setConfirmDelete(false)} />
-          <div className="relative w-full max-w-sm bg-white rounded-2xl p-5 shadow-xl">
-            <h3 className="font-bold text-gray-900 text-lg">Remove this place?</h3>
-            <p className="text-sm text-gray-500 mt-1">
+          <div className="absolute inset-0 bg-stone-950/40 backdrop-blur-sm" onClick={() => !deleting && setConfirmDelete(false)} />
+          <div className="relative w-full max-w-sm bg-white rounded-3xl p-5 shadow-xl animate-rise">
+            <h3 className="font-bold text-stone-900 text-lg">Remove this place?</h3>
+            <p className="text-sm text-stone-500 mt-1">
               Your meals, visits, and photos for {place.name} will also be deleted. This can&apos;t be undone.
             </p>
             <div className="flex gap-2 mt-5">
               <button
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
-                className="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
+                className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
               >
                 Cancel
               </button>

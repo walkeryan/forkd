@@ -53,73 +53,74 @@ export default async function ProfilePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight text-stone-900 mb-6">Profile</h1>
 
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4 mb-4">
+      <div className="rounded-2xl p-5 bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/20 flex items-center gap-4 mb-4 text-white">
         {session?.user?.image && (
-          <Image src={session.user.image} alt="" width={48} height={48} className="rounded-full" />
+          <Image src={session.user.image} alt="" width={56} height={56} className="rounded-full ring-2 ring-white/60 w-14 h-14" />
         )}
         <div>
-          <p className="font-semibold text-gray-900">{session?.user?.name}</p>
-          <p className="text-sm text-gray-400">{session?.user?.email}</p>
+          <p className="font-bold text-white">{session?.user?.name}</p>
+          <p className="text-sm text-orange-100">{session?.user?.email}</p>
         </div>
       </div>
 
       {hasStats ? (
         <>
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 text-center">
-              <MapPin className="w-5 h-5 mx-auto text-orange-500 mb-1" />
-              <p className="text-xl font-bold text-gray-900">{placeCount}</p>
-              <p className="text-[11px] text-gray-400">Places</p>
+            <div className="card p-3 text-center">
+              <span className="w-8 h-8 mx-auto rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center mb-1.5"><MapPin className="w-4 h-4" /></span>
+              <p className="text-2xl font-extrabold tracking-tight tabular-nums text-stone-900">{placeCount}</p>
+              <p className="text-[11px] font-medium text-stone-500">Places</p>
             </div>
-            <div className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 text-center">
-              <CalendarCheck className="w-5 h-5 mx-auto text-orange-500 mb-1" />
-              <p className="text-xl font-bold text-gray-900">{visitCount}</p>
-              <p className="text-[11px] text-gray-400">Visits</p>
+            <div className="card p-3 text-center">
+              <span className="w-8 h-8 mx-auto rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center mb-1.5"><CalendarCheck className="w-4 h-4" /></span>
+              <p className="text-2xl font-extrabold tracking-tight tabular-nums text-stone-900">{visitCount}</p>
+              <p className="text-[11px] font-medium text-stone-500">Visits</p>
             </div>
-            <div className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 text-center">
-              <Star className="w-5 h-5 mx-auto text-orange-500 mb-1" />
-              <p className="text-xl font-bold text-gray-900">{avgRating ? avgRating.toFixed(1) : '—'}</p>
-              <p className="text-[11px] text-gray-400">Avg rating</p>
+            <div className="card p-3 text-center">
+              <span className="w-8 h-8 mx-auto rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center mb-1.5"><Star className="w-4 h-4" /></span>
+              <p className="text-2xl font-extrabold tracking-tight tabular-nums text-stone-900">{avgRating ? avgRating.toFixed(1) : '—'}</p>
+              <p className="text-[11px] font-medium text-stone-500">Avg rating</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
-            <div className="flex items-center gap-2 font-medium text-gray-700 mb-3">
-              <TrendingUp className="w-4 h-4" /> Visits by month
+          <div className="card p-4 mb-4">
+            <div className="flex items-center gap-2 font-semibold text-stone-800 mb-3">
+              <span className="w-8 h-8 rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center"><TrendingUp className="w-4 h-4" /></span>
+              Visits by month
             </div>
             <div className="flex items-end justify-between gap-2 h-24">
-              {buckets.map((b) => (
+              {buckets.map((b, i) => (
                 <div key={b.key} className="flex-1 flex flex-col items-center justify-end h-full">
-                  <span className="text-[10px] text-gray-400 mb-0.5">{b.count || ''}</span>
+                  <span className="text-[10px] text-stone-400 mb-0.5">{b.count || ''}</span>
                   <div
-                    className="w-full bg-orange-400 rounded-t"
+                    className={`w-full bg-gradient-to-t from-orange-500 to-amber-400 rounded-t-md ${i === buckets.length - 1 ? '' : 'opacity-60'}`}
                     style={{ height: `${(b.count / maxBucket) * 100}%`, minHeight: b.count ? '4px' : '0' }}
                   />
-                  <span className="text-[10px] text-gray-400 mt-1">{b.label}</span>
+                  <span className="text-[10px] text-stone-400 mt-1">{b.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {mostVisited && mostVisited._count.visits > 0 && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
-              <p className="text-xs text-gray-400 mb-1">Most visited</p>
+            <div className="card p-4 mb-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Most visited</p>
               <Link href={`/places/${mostVisited.id}`} className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">{mostVisited.place.name}</span>
+                <span className="font-semibold text-stone-900">{mostVisited.place.name}</span>
                 <span className="text-sm text-orange-500 font-medium">{mostVisited._count.visits} visits</span>
               </Link>
             </div>
           )}
 
           {topRated.length > 0 && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
-              <p className="text-xs text-gray-400 mb-2">Top rated</p>
+            <div className="card p-4 mb-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">Top rated</p>
               <div className="space-y-2">
                 {topRated.map((up) => (
                   <Link key={up.id} href={`/places/${up.id}`} className="flex items-center justify-between">
-                    <span className="font-medium text-gray-800 text-sm">{up.place.name}</span>
+                    <span className="font-medium text-stone-800 text-sm">{up.place.name}</span>
                     <span className="flex items-center gap-0.5 text-orange-500 text-sm font-semibold">
                       <Star className="w-3.5 h-3.5 fill-orange-500" />{up.rating!.toFixed(1)}
                     </span>
@@ -130,13 +131,13 @@ export default async function ProfilePage() {
           )}
         </>
       ) : (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center text-gray-400 mb-4">
+        <div className="card p-6 text-center text-stone-400 mb-4">
           <p className="text-sm">Add some places and your stats will show up here.</p>
         </div>
       )}
 
       <form action={async () => { 'use server'; await signOut({ redirectTo: '/signin' }) }}>
-        <button type="submit" className="w-full border border-red-200 text-red-500 rounded-xl py-3 text-sm font-medium">
+        <button type="submit" className="w-full bg-white border border-red-200 text-red-500 rounded-xl py-3 text-sm font-medium shadow-sm active:bg-red-50 transition mb-4">
           Sign Out
         </button>
       </form>

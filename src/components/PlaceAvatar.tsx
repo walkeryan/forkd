@@ -54,7 +54,7 @@ export default function PlaceAvatar({ place, size = 'md', className = '' }: Plac
         src={sources[srcIndex]}
         alt={place.name}
         onError={() => setSrcIndex((i) => i + 1)}
-        className={`${s.box} object-cover bg-gray-100 flex-shrink-0 ${className}`}
+        className={`${s.box} object-cover bg-stone-100 border border-stone-200/60 flex-shrink-0 ${className}`}
       />
     )
   }
@@ -63,7 +63,7 @@ export default function PlaceAvatar({ place, size = 'md', className = '' }: Plac
   return (
     <div
       aria-hidden
-      className={`${s.box} flex items-center justify-center bg-orange-50 flex-shrink-0 ${className}`}
+      className={`${s.box} flex items-center justify-center bg-gradient-to-br from-orange-100 to-amber-50 border border-orange-100/60 flex-shrink-0 ${className}`}
     >
       <span className={s.emoji}>{chip?.emoji ?? '🍽️'}</span>
     </div>

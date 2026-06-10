@@ -2,16 +2,18 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { Plus } from 'lucide-react'
 import AddPlaceModal from '@/components/AddPlaceModal'
 
+// Controller for the Add Place modal. The visible entry points are the raised
+// Add tab in the bottom nav and the header + button — both link to
+// /places?add=true, which this component watches. (The old floating action
+// button was removed; the nav Add button replaced it.)
 export default function AddPlaceFab() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
 
-  // The nav "Add" tab redirects to /places?add=true so it shares this exact
-  // modal. Open on that param, then strip it so refresh/back behave sanely.
+  // Open on the ?add=true param, then strip it so refresh/back behave sanely.
   useEffect(() => {
     if (searchParams.get('add') === 'true') {
       setOpen(true)
@@ -27,16 +29,5 @@ export default function AddPlaceFab() {
     router.push(mode === 'wishlist' ? '/wishlist' : `/places/${id}`)
   }
 
-  return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Add place"
-        className="fixed bottom-24 right-5 z-40 bg-orange-500 text-white rounded-full p-4 shadow-lg active:scale-95 transition"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
-      <AddPlaceModal open={open} onClose={() => setOpen(false)} onSuccess={handleSuccess} />
-    </>
-  )
+  return <AddPlaceModal open={open} onClose={() => setOpen(false)} onSuccess={handleSuccess} />
 }

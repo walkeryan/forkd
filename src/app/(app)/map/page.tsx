@@ -65,10 +65,10 @@ export default async function MapPage() {
   return (
     <div className="flex flex-col h-[calc(100dvh-4rem)]">
       <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Map</h1>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Visited</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Wishlist</span>
+        <h1 className="text-2xl font-extrabold tracking-tight text-stone-900">Map</h1>
+        <div className="flex items-center gap-2 text-xs text-stone-500">
+          <span className="flex items-center gap-1 bg-white/80 backdrop-blur rounded-full px-2.5 py-1 border border-stone-200/60 shadow-sm"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Visited</span>
+          <span className="flex items-center gap-1 bg-white/80 backdrop-blur rounded-full px-2.5 py-1 border border-stone-200/60 shadow-sm"><span className="w-2.5 h-2.5 rounded-full bg-teal-500" /> Wishlist</span>
         </div>
       </div>
       {places.length === 0 ? (
@@ -76,7 +76,7 @@ export default async function MapPage() {
           <EmptyState icon={MapIcon} title="Nothing to map yet" hint="Add places with a location and they’ll show up here." />
         </div>
       ) : (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden rounded-t-3xl border-t border-stone-200/60 shadow-[0_-2px_12px_rgba(28,25,23,0.06)]">
           <MapView places={places} center={center} />
         </div>
       )}

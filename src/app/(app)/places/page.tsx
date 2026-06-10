@@ -48,8 +48,8 @@ export default async function PlacesPage({
   return (
     <div className="max-w-lg mx-auto px-4 pt-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">My Places</h1>
-        <Link href="/places?add=true" className="bg-orange-500 text-white rounded-full p-2 shadow">
+        <h1 className="text-2xl font-extrabold tracking-tight text-stone-900">My Places</h1>
+        <Link href="/places?add=true" className="bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-full p-2.5 shadow-lg shadow-orange-500/30 active:scale-95 transition">
           <Plus className="w-5 h-5" />
         </Link>
       </div>
@@ -65,27 +65,27 @@ export default async function PlacesPage({
       ) : (
         <div className="space-y-3">
           {userPlaces.map(({ id, place, rating, priceRange, _count }) => (
-            <Link key={id} href={`/places/${id}`} className="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <Link key={id} href={`/places/${id}`} className="card block p-4 active:scale-[0.99] transition-all duration-150">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
                   <PlaceAvatar place={place} size="md" />
                   <div className="min-w-0">
-                    <h2 className="font-semibold text-gray-900 truncate">{place.name}</h2>
-                    {place.city && <p className="text-sm text-gray-400 mt-0.5">{place.city}{place.state ? `, ${place.state}` : ''}</p>}
+                    <h2 className="font-semibold text-stone-900 truncate">{place.name}</h2>
+                    {place.city && <p className="text-sm text-stone-400 mt-0.5">{place.city}{place.state ? `, ${place.state}` : ''}</p>}
                   </div>
                 </div>
                 {rating && (
-                  <div className="flex items-center gap-1 text-orange-500 flex-shrink-0">
+                  <div className="flex items-center gap-1 text-orange-500 flex-shrink-0 bg-amber-50 rounded-full px-2 py-0.5">
                     <Star className="w-4 h-4 fill-orange-500" />
                     <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+              <div className="flex items-center gap-2 mt-2 text-xs text-stone-400">
                 {(() => {
                   const chip = cuisineChip(place.cuisine)
                   return chip ? (
-                    <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">
+                    <span className="inline-flex items-center gap-1 bg-stone-100 text-stone-600 rounded-full px-2 py-0.5">
                       <span>{chip.emoji}</span>{chip.label}
                     </span>
                   ) : null

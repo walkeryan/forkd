@@ -157,10 +157,10 @@ export default function MealForm({
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           placeholder="What did you have? *"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
         />
         {showSuggestions && filtered.length > 0 && (
-          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-lg max-h-52 overflow-y-auto">
+          <div className="absolute z-20 mt-1 w-full bg-white border border-stone-200/60 rounded-xl shadow-xl shadow-stone-950/10 max-h-52 overflow-y-auto">
             {filtered.map((dish) => (
               <button
                 key={dish}
@@ -170,7 +170,7 @@ export default function MealForm({
                   setName(dish)
                   setShowSuggestions(false)
                 }}
-                className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50"
+                className="block w-full text-left px-3 py-2 text-sm text-stone-700 hover:bg-orange-50"
               >
                 {dish}
               </button>
@@ -181,13 +181,13 @@ export default function MealForm({
 
       {/* Food rating */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500">Food</span>
+        <span className="text-xs font-medium text-stone-500">Food</span>
         <StarRating value={rating} onChange={setRating} size="sm" />
       </div>
 
       {/* Service rating */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500">Service</span>
+        <span className="text-xs font-medium text-stone-500">Service</span>
         <StarRating value={serviceRating} onChange={setServiceRating} size="sm" />
       </div>
 
@@ -195,7 +195,7 @@ export default function MealForm({
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">
           {previews.map((url, i) => (
-            <div key={url} className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+            <div key={url} className="relative w-16 h-16 rounded-lg overflow-hidden bg-stone-100">
               <img src={url} alt="" className="w-full h-full object-cover" />
               <button
                 type="button"
@@ -210,7 +210,7 @@ export default function MealForm({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-16 h-16 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 active:bg-gray-50"
+            className="w-16 h-16 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-stone-300 rounded-xl text-stone-400 hover:border-orange-300 hover:text-orange-500 active:bg-stone-50 transition-colors"
             aria-label="Add photo"
           >
             <Camera className="w-5 h-5" />
@@ -221,7 +221,7 @@ export default function MealForm({
       </div>
 
       {/* Favorite */}
-      <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+      <label className="flex items-center gap-2 text-sm text-stone-600 cursor-pointer">
         <input
           type="checkbox"
           checked={isFavorite}
@@ -232,11 +232,11 @@ export default function MealForm({
       </label>
 
       {/* Collapsible details */}
-      <div className="border-t border-gray-100 pt-2">
+      <div className="border-t border-stone-200/60 pt-2">
         <button
           type="button"
           onClick={() => setMoreOpen((v) => !v)}
-          className="flex items-center gap-1 text-sm font-medium text-gray-500"
+          className="flex items-center gap-1 text-sm font-medium text-stone-500"
         >
           {moreOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           More details
@@ -248,21 +248,21 @@ export default function MealForm({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Meal notes — describe the dish, how it tasted"
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
             />
             <textarea
               value={serviceNotes}
               onChange={(e) => setServiceNotes(e.target.value)}
               placeholder="Service notes — wait staff, attentiveness, friendliness"
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
             />
             <textarea
               value={managementNotes}
               onChange={(e) => setManagementNotes(e.target.value)}
               placeholder="Atmosphere notes — management vibe, cleanliness, noise level"
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
             />
           </div>
         )}
@@ -275,7 +275,7 @@ export default function MealForm({
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="flex-1 border border-gray-200 text-gray-500 rounded-lg py-2 text-sm font-medium disabled:opacity-50"
+            className="flex-1 border border-stone-200 text-stone-500 rounded-lg py-2 text-sm font-medium disabled:opacity-50"
           >
             {cancelLabel}
           </button>
@@ -284,7 +284,7 @@ export default function MealForm({
           type="button"
           onClick={submit}
           disabled={submitting || !name.trim()}
-          className="flex-1 bg-orange-500 text-white rounded-lg py-2 text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+          className="flex-1 bg-gradient-to-b from-orange-500 to-orange-600 text-white rounded-lg py-2 text-sm font-semibold shadow-sm shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           {submitLabel}

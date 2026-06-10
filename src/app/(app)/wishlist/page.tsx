@@ -26,7 +26,10 @@ export default async function WishlistPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Wishlist</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight text-stone-900 mb-1">Wishlist</h1>
+      <p className="text-sm text-stone-500 mb-6">
+        {entries.length > 0 ? `${entries.length} place${entries.length !== 1 ? 's' : ''} to try` : 'Places you want to try'}
+      </p>
       {entries.length === 0 ? (
         <EmptyState
           icon={Bookmark}

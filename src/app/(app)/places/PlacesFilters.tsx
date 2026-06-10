@@ -42,15 +42,15 @@ export default function PlacesFilters({ q, sort, price }: { q: string; sort: Sor
   return (
     <div className="space-y-3 mb-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
         <input
           value={text}
           onChange={(e) => onSearch(e.target.value)}
           placeholder="Search your places…"
-          className="w-full border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full bg-white/80 border border-stone-200 rounded-2xl pl-9 pr-9 py-3 text-sm shadow-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 transition-shadow"
         />
         {text && (
-          <button onClick={() => onSearch('')} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <button onClick={() => onSearch('')} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
             <X className="w-4 h-4" />
           </button>
         )}
@@ -61,20 +61,20 @@ export default function PlacesFilters({ q, sort, price }: { q: string; sort: Sor
           <button
             key={s.key}
             onClick={() => push({ sort: s.key })}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-              sort === s.key ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-500 bg-white'
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border active:scale-95 transition ${
+              sort === s.key ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-200 text-stone-500 bg-white/70'
             }`}
           >
             {s.label}
           </button>
         ))}
-        <div className="flex-shrink-0 w-px bg-gray-200 mx-1" />
+        <div className="flex-shrink-0 w-px bg-stone-200 mx-1" />
         {[1, 2, 3, 4].map((p) => (
           <button
             key={p}
             onClick={() => push({ price: price === p ? null : p })}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-              price === p ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-500 bg-white'
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border active:scale-95 transition ${
+              price === p ? 'bg-orange-500 text-white border-orange-500' : 'border-stone-200 text-stone-500 bg-white/70'
             }`}
           >
             {'$'.repeat(p)}
