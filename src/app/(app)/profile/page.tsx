@@ -3,7 +3,8 @@ import { signOut } from '@/auth'
 import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
-import { MapPin, CalendarCheck, Star, TrendingUp } from 'lucide-react'
+import { isAdmin } from '@/lib/admin'
+import { MapPin, CalendarCheck, Star, TrendingUp, Shield, ChevronRight } from 'lucide-react'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -134,6 +135,14 @@ export default async function ProfilePage() {
         <div className="card p-6 text-center text-stone-400 mb-4">
           <p className="text-sm">Add some places and your stats will show up here.</p>
         </div>
+      )}
+
+      {isAdmin(session?.user?.email) && (
+        <Link href="/admin" className="card p-4 mb-4 flex items-center gap-3 active:scale-[0.99] transition-all duration-150">
+          <span className="w-9 h-9 rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center"><Shield className="w-4 h-4" /></span>
+          <span className="font-semibold text-stone-800 flex-1">Admin dashboard</span>
+          <ChevronRight className="w-4 h-4 text-stone-400" />
+        </Link>
       )}
 
       <form action={async () => { 'use server'; await signOut({ redirectTo: '/signin' }) }}>
