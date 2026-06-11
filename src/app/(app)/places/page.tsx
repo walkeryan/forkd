@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { MapPin, Plus, Star, SearchX } from 'lucide-react'
+import { Bookmark, MapPin, Plus, Star, SearchX } from 'lucide-react'
 import AddPlaceFab from '@/components/AddPlaceFab'
 import EmptyState from '@/components/EmptyState'
 import PlaceAvatar from '@/components/PlaceAvatar'
@@ -49,9 +49,14 @@ export default async function PlacesPage({
     <div className="max-w-lg mx-auto px-4 pt-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-extrabold tracking-tight text-stone-900">My Places</h1>
-        <Link href="/places?add=true" className="bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-full p-2.5 shadow-lg shadow-orange-500/30 active:scale-95 transition">
-          <Plus className="w-5 h-5" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/wishlist" aria-label="Wishlist" className="bg-white text-teal-600 border border-stone-200 rounded-full p-2.5 shadow-sm active:scale-95 transition">
+            <Bookmark className="w-5 h-5" />
+          </Link>
+          <Link href="/places?add=true" className="bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-full p-2.5 shadow-lg shadow-orange-500/30 active:scale-95 transition">
+            <Plus className="w-5 h-5" />
+          </Link>
+        </div>
       </div>
 
       {totalTracked > 0 && <PlacesFilters q={q} sort={sort} price={price} />}

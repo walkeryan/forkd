@@ -1,9 +1,11 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { GoogleMap, MarkerF, InfoWindowF, useJsApiLoader } from '@react-google-maps/api'
 import Link from 'next/link'
-import { Star, Loader2, MapPin } from 'lucide-react'
+import { Star, Loader2, MapPin, Plus, X } from 'lucide-react'
 import { cuisineChip } from '@/lib/places'
+import MealForm from '@/components/MealForm'
 
 export interface MapPlace {
   id: string
@@ -26,6 +28,7 @@ const VISITED_COLOR = '#f97316'
 const WISHLIST_COLOR = '#0d9488'
 
 export default function MapClient({ places, center }: { places: MapPlace[]; center: { lat: number; lng: number } }) {
+  const router = useRouter()
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -33,6 +36,8 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
   })
 
   const [selected, setSelected] = useState<MapPlace | null>(null)
+  // Place a meal is being logged at, straight from its map pin.
+  const [mealPlace, setMealPlace] = useState<MapPlace | null>(null)
 
   // Surface auth/config failures (bad key, Maps JS API not enabled, referrer
   // restrictions). Google calls this global instead of rejecting the loader.
@@ -103,6 +108,7 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
   }
 
   return (
+    <>
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={center}
@@ -147,15 +153,54 @@ export default function MapClient({ places, center }: { places: MapPlace[]; cent
                 </span>
               )}
             </div>
-            <Link
-              href={selected.status === 'visited' ? `/places/${selected.id}` : '/wishlist'}
-              className="inline-block mt-2 text-xs font-semibold text-orange-600"
-            >
-              View →
-            </Link>
+            <div className="flex items-center gap-3 mt-2">
+              {selected.status === 'visited' && (
+                <button
+                  onClick={() => { setMealPlace(selected); setSelected(null) }}
+                  className="inline-flex items-center gap-1 bg-gradient-to-b from-orange-500 to-orange-600 text-white text-xs font-semibold rounded-lg px-2.5 py-1.5 shadow-sm shadow-orange-500/20 active:scale-95 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Log a Meal
+                </button>
+              )}
+              <Link
+                href={selected.status === 'visited' ? `/places/${selected.id}` : '/wishlist'}
+                className="inline-block text-xs font-semibold text-orange-600"
+              >
+                View →
+              </Link>
+            </div>
           </div>
         </InfoWindowF>
       )}
     </GoogleMap>
+
+    {/* Log-a-meal sheet, opened from a map pin */}
+    {mealPlace && (
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="absolute inset-0 bg-stone-950/40 backdrop-blur-sm" onClick={() => setMealPlace(null)} />
+        <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-stone-950/20 max-h-[88vh] flex flex-col animate-rise">
+          <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-stone-200 sm:hidden" />
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-stone-200/60">
+            <h2 className="text-lg font-bold tracking-tight text-stone-900">
+              Log a Meal at <span className="text-orange-600">{mealPlace.name}</span>
+            </h2>
+            <button onClick={() => setMealPlace(null)} className="text-stone-400 p-1" aria-label="Close">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="overflow-y-auto px-5 py-4">
+            <MealForm
+              userPlaceId={mealPlace.id}
+              placeName={mealPlace.name}
+              cuisine={mealPlace.cuisine}
+              autoFocus
+              submitLabel="Add Meal"
+              onSaved={() => { setMealPlace(null); router.refresh() }}
+            />
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
