@@ -5,6 +5,9 @@ import Image from 'next/image'
 import { MapPin, CalendarCheck, Bookmark, Plus, Map, Clock, ChevronRight } from 'lucide-react'
 import StarRating from '@/components/StarRating'
 import EmptyState from '@/components/EmptyState'
+import DinnerPicker, { type PickerCandidate } from '@/components/DinnerPicker'
+import TonightSpecials, { type TonightSpecial } from '@/components/TonightSpecials'
+import OnThisDay, { type PastVisit } from '@/components/OnThisDay'
 import { cuisineChip } from '@/lib/places'
 
 // Short, friendly relative date for the activity feed. Rendered on the server,
@@ -22,7 +25,7 @@ export default async function HomePage() {
   const userId = session!.user!.id
   const firstName = session?.user?.name?.trim().split(/\s+/)[0] ?? 'there'
 
-  const [placeCount, visitCount, wishlistCount, recentVisits, wishlist] = await Promise.all([
+  const [placeCount, visitCount, wishlistCount, recentVisits, wishlistAll, visitedPlaces, trackedSpecials, pastVisits] = await Promise.all([
     prisma.userPlace.count({ where: { userId, status: 'visited' } }),
     prisma.visit.count({ where: { userPlace: { userId } } }),
     prisma.wishlistItem.count({ where: { userId } }),
@@ -36,9 +39,72 @@ export default async function HomePage() {
       where: { userId },
       include: { place: true },
       orderBy: { addedAt: 'desc' },
-      take: 3,
+    }),
+    prisma.userPlace.findMany({
+      where: { userId, status: 'visited' },
+      include: { place: true },
+    }),
+    // Recurring specials at any place the user tracks or wishlists; the
+    // client filters to today's weekday in the user's timezone.
+    prisma.placeSpecial.findMany({
+      where: {
+        isRecurring: true,
+        dayOfWeek: { not: null },
+        place: { OR: [{ userPlaces: { some: { userId } } }, { wishlist: { some: { userId } } }] },
+      },
+      include: { place: { include: { userPlaces: { where: { userId }, select: { id: true } } } } },
+    }),
+    // History for "on this day" — client matches month/day in local time.
+    prisma.visit.findMany({
+      where: { userPlace: { userId } },
+      select: { visitedAt: true, rating: true, userPlace: { select: { id: true, rating: true, place: { select: { name: true } } } } },
+      orderBy: { visitedAt: 'desc' },
+      take: 1000,
     }),
   ])
+
+  const wishlist = wishlistAll.slice(0, 3)
+
+  const pickerCandidates: PickerCandidate[] = [
+    ...visitedPlaces.map((up) => ({
+      href: `/places/${up.id}`,
+      name: up.place.name,
+      rating: up.rating,
+      cuisine: up.place.cuisine,
+      kind: 'visited' as const,
+      placeId: up.place.id,
+      website: up.place.website,
+      imagePath: up.place.imagePath,
+    })),
+    ...wishlistAll.map((w) => ({
+      href: '/wishlist',
+      name: w.place.name,
+      rating: null,
+      cuisine: w.place.cuisine,
+      kind: 'wishlist' as const,
+      placeId: w.place.id,
+      website: w.place.website,
+      imagePath: w.place.imagePath,
+    })),
+  ]
+
+  const tonightSpecials: TonightSpecial[] = trackedSpecials.map((s) => ({
+    id: s.id,
+    type: s.type,
+    title: s.title,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    dayOfWeek: s.dayOfWeek,
+    placeName: s.place.name,
+    href: s.place.userPlaces[0] ? `/places/${s.place.userPlaces[0].id}` : '/wishlist',
+  }))
+
+  const onThisDayVisits: PastVisit[] = pastVisits.map((v) => ({
+    visitedAt: v.visitedAt.toISOString(),
+    placeName: v.userPlace.place.name,
+    rating: v.rating ?? v.userPlace.rating,
+    href: `/places/${v.userPlace.id}`,
+  }))
 
   const stats = [
     { label: 'Places', value: placeCount, icon: MapPin, href: '/places' },
@@ -89,6 +155,15 @@ export default async function HomePage() {
           View Map
         </Link>
       </div>
+
+      {/* Dinner picker */}
+      <DinnerPicker candidates={pickerCandidates} />
+
+      {/* Specials happening today */}
+      <TonightSpecials specials={tonightSpecials} />
+
+      {/* Memories */}
+      <OnThisDay visits={onThisDayVisits} />
 
       {/* Recent activity */}
       <section className="mb-8">

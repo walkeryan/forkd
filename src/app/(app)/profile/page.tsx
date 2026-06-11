@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { isAdmin } from '@/lib/admin'
+import StreakBadges from '@/components/StreakBadges'
 import { MapPin, CalendarCheck, Star, TrendingUp, Shield, ChevronRight } from 'lucide-react'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -12,7 +13,7 @@ export default async function ProfilePage() {
   const session = await auth()
   const userId = session!.user!.id
 
-  const [placeCount, visitCount, avgAgg, mostVisited, topRated, recentVisits] = await Promise.all([
+  const [placeCount, visitCount, avgAgg, mostVisited, topRated, recentVisits, mealNames, photoCount] = await Promise.all([
     prisma.userPlace.count({ where: { userId, status: 'visited' } }),
     prisma.visit.count({ where: { userPlace: { userId } } }),
     prisma.userPlace.aggregate({ where: { userId, rating: { not: null } }, _avg: { rating: true } }),
@@ -33,6 +34,11 @@ export default async function ProfilePage() {
       orderBy: { visitedAt: 'desc' },
       take: 500,
     }),
+    prisma.meal.findMany({
+      where: { userPlace: { userId } },
+      select: { name: true },
+    }),
+    prisma.photo.count({ where: { userId } }),
   ])
 
   const avgRating = avgAgg._avg.rating
@@ -68,6 +74,17 @@ export default async function ProfilePage() {
 
       {hasStats ? (
         <>
+          <StreakBadges
+            visitDates={recentVisits.map((v) => v.visitedAt.toISOString())}
+            stats={{
+              visits: visitCount,
+              places: placeCount,
+              meals: mealNames.length,
+              photos: photoCount,
+              mealNames: mealNames.map((m) => m.name),
+            }}
+          />
+
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="card p-3 text-center">
               <span className="w-8 h-8 mx-auto rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center mb-1.5"><MapPin className="w-4 h-4" /></span>
