@@ -8,18 +8,22 @@ const { auth } = NextAuth(authConfig)
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth
-  const isAuthPage = req.nextUrl.pathname.startsWith('/signin')
-  const isApiAuth = req.nextUrl.pathname.startsWith('/api/auth')
+  const { pathname } = req.nextUrl
+  const isPublic =
+    pathname.startsWith('/signin') ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/l/') || // public shared lists
+    pathname.startsWith('/api/cron') // protected by CRON_SECRET, not a session
 
-  if (!isLoggedIn && !isAuthPage && !isApiAuth) {
+  if (!isLoggedIn && !isPublic) {
     return NextResponse.redirect(new URL('/signin', req.url))
   }
   return NextResponse.next()
 })
 
 export const config = {
-  // Exclude Next internals, the manifest, and any static asset with a file
-  // extension (favicons, the logo, app icons, images) so unauthenticated
-  // requests for them aren't redirected to /signin.
-  matcher: ['/((?!_next/static|_next/image|manifest.json|.*\\.(?:png|svg|ico|jpg|jpeg|webp|gif)).*)'],
+  // Exclude Next internals, the manifest, the service worker, and any static
+  // asset with a file extension (favicons, the logo, app icons, images) so
+  // unauthenticated requests for them aren't redirected to /signin.
+  matcher: ['/((?!_next/static|_next/image|manifest.json|sw.js|.*\\.(?:png|svg|ico|jpg|jpeg|webp|gif)).*)'],
 }

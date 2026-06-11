@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { isAdmin } from '@/lib/admin'
 import StreakBadges from '@/components/StreakBadges'
+import NotificationsCard from '@/components/NotificationsCard'
+import ShareListCard from '@/components/ShareListCard'
 import { MapPin, CalendarCheck, Star, TrendingUp, Shield, ChevronRight } from 'lucide-react'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -13,7 +15,7 @@ export default async function ProfilePage() {
   const session = await auth()
   const userId = session!.user!.id
 
-  const [placeCount, visitCount, avgAgg, mostVisited, topRated, recentVisits, mealNames, photoCount] = await Promise.all([
+  const [placeCount, visitCount, avgAgg, mostVisited, topRated, recentVisits, mealNames, photoCount, sharedList] = await Promise.all([
     prisma.userPlace.count({ where: { userId, status: 'visited' } }),
     prisma.visit.count({ where: { userPlace: { userId } } }),
     prisma.userPlace.aggregate({ where: { userId, rating: { not: null } }, _avg: { rating: true } }),
@@ -39,6 +41,7 @@ export default async function ProfilePage() {
       select: { name: true },
     }),
     prisma.photo.count({ where: { userId } }),
+    prisma.sharedList.findFirst({ where: { userId }, select: { slug: true } }),
   ])
 
   const avgRating = avgAgg._avg.rating
@@ -153,6 +156,9 @@ export default async function ProfilePage() {
           <p className="text-sm">Add some places and your stats will show up here.</p>
         </div>
       )}
+
+      <NotificationsCard />
+      <ShareListCard initialSlug={sharedList?.slug ?? null} />
 
       {isAdmin(session?.user?.email) && (
         <Link href="/admin" className="card p-4 mb-4 flex items-center gap-3 active:scale-[0.99] transition-all duration-150">
