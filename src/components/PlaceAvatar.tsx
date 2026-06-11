@@ -1,6 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { cuisineChip } from '@/lib/places'
+import { chainDomain } from '@/lib/menuData'
 
 interface PlaceAvatarProps {
   place: {
@@ -30,21 +31,32 @@ function domainOf(website: string): string | null {
 }
 
 /**
- * Place avatar with a graceful fallback chain:
- *  1. brand logo (favicon service keyed off the place's website domain)
- *  2. cached Google Places photo
- *  3. cuisine emoji
+ * Place avatar with a graceful fallback chain. Known chains lead with their
+ * brand logo; everyone else leads with their real photo — small local sites
+ * often have no favicon, and the favicon service "succeeds" with a generic
+ * page icon instead of erroring, which would block the photo fallback.
+ *  chain:  logo -> photo -> emoji
+ *  other:  photo -> site favicon -> emoji
  */
 export default function PlaceAvatar({ place, size = 'md', className = '' }: PlaceAvatarProps) {
   const s = SIZES[size]
 
   const sources = useMemo(() => {
     const list: string[] = []
+    const favicon = (d: string) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=${s.px}`
+    const chain = chainDomain(place.name)
     const domain = place.website ? domainOf(place.website) : null
-    if (domain) list.push(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${s.px}`)
-    if (place.imagePath) list.push(`/api/place-images/${place.id}`)
+    const photo = place.imagePath ? `/api/place-images/${place.id}` : null
+
+    if (chain) {
+      list.push(favicon(chain))
+      if (photo) list.push(photo)
+    } else {
+      if (photo) list.push(photo)
+      if (domain) list.push(favicon(domain))
+    }
     return list
-  }, [place.id, place.website, place.imagePath, s.px])
+  }, [place.id, place.name, place.website, place.imagePath, s.px])
 
   const [srcIndex, setSrcIndex] = useState(0)
 

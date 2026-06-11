@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { chainDomain } from '@/lib/menuData'
 import { readFile, writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
@@ -46,14 +47,14 @@ export async function GET(req: Request, { params }: { params: { placeId: string 
 
   const place = await prisma.place.findUnique({
     where: { id: params.placeId },
-    select: { imagePath: true, website: true },
+    select: { name: true, imagePath: true, website: true },
   })
   if (!place) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const uploadDir = process.env.UPLOAD_DIR ?? './uploads'
   const safeId = params.placeId.replace(/[^a-zA-Z0-9_-]/g, '')
-  // v2: logo-first source priority (bump invalidates photo-first cache files).
-  const cacheRelative = path.join('marker-icons', `${safeId}-${status}-v2.png`)
+  // v3: chain-logo-first, photo-first for everyone else (matches PlaceAvatar).
+  const cacheRelative = path.join('marker-icons', `${safeId}-${status}-v3.png`)
   const cacheAbsolute = path.join(uploadDir, cacheRelative)
 
   const headers = { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=86400' }
@@ -64,23 +65,40 @@ export async function GET(req: Request, { params }: { params: { placeId: string 
     // Not cached yet — build it below.
   }
 
-  // Source image: brand favicon first (matches PlaceAvatar's logo-first
-  // priority — chains show their logo), then the cached place photo.
-  let src: Buffer | null = null
-  if (place.website) {
+  // Source priority matches PlaceAvatar: known chains lead with the brand
+  // favicon; everyone else leads with their real photo (small local sites
+  // often lack favicons and the favicon service returns a generic page icon
+  // rather than an error).
+  const fetchFavicon = async (domain: string): Promise<Buffer | null> => {
     try {
-      const domain = new URL(place.website.includes('://') ? place.website : `https://${place.website}`).hostname
       const res = await fetch(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`, { cache: 'no-store' })
-      if (res.ok) src = Buffer.from(await res.arrayBuffer())
+      return res.ok ? Buffer.from(await res.arrayBuffer()) : null
     } catch {
-      src = null
+      return null
     }
   }
-  if (!src && place.imagePath) {
+  const readPhoto = async (): Promise<Buffer | null> => {
+    if (!place.imagePath) return null
     try {
-      src = await readFile(path.join(uploadDir, place.imagePath))
+      return await readFile(path.join(uploadDir, place.imagePath))
     } catch {
-      src = null
+      return null
+    }
+  }
+
+  const chain = chainDomain(place.name)
+  let src: Buffer | null = null
+  if (chain) {
+    src = (await fetchFavicon(chain)) ?? (await readPhoto())
+  } else {
+    src = await readPhoto()
+    if (!src && place.website) {
+      try {
+        const domain = new URL(place.website.includes('://') ? place.website : `https://${place.website}`).hostname
+        src = await fetchFavicon(domain)
+      } catch {
+        src = null
+      }
     }
   }
 
