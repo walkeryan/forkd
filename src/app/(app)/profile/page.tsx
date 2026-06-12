@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { isAdmin } from '@/lib/admin'
 import StreakBadges from '@/components/StreakBadges'
+import { cuisineChip } from '@/lib/places'
 import NotificationsCard from '@/components/NotificationsCard'
 import ShareListCard from '@/components/ShareListCard'
 import { MapPin, CalendarCheck, Star, TrendingUp, Shield, ChevronRight } from 'lucide-react'
@@ -15,7 +16,7 @@ export default async function ProfilePage() {
   const session = await auth()
   const userId = session!.user!.id
 
-  const [placeCount, visitCount, avgAgg, mostVisited, topRated, recentVisits, mealNames, photoCount, sharedList] = await Promise.all([
+  const [placeCount, visitCount, avgAgg, mostVisited, topRated, recentVisits, mealNames, photoCount, sharedList, cuisinePlaces] = await Promise.all([
     prisma.userPlace.count({ where: { userId, status: 'visited' } }),
     prisma.visit.count({ where: { userPlace: { userId } } }),
     prisma.userPlace.aggregate({ where: { userId, rating: { not: null } }, _avg: { rating: true } }),
@@ -42,6 +43,10 @@ export default async function ProfilePage() {
     }),
     prisma.photo.count({ where: { userId } }),
     prisma.sharedList.findFirst({ where: { userId }, select: { slug: true } }),
+    prisma.userPlace.findMany({
+      where: { userId, status: 'visited' },
+      select: { place: { select: { cuisine: true } }, _count: { select: { visits: true } } },
+    }),
   ])
 
   const avgRating = avgAgg._avg.rating
@@ -60,6 +65,20 @@ export default async function ProfilePage() {
   }
   const maxBucket = Math.max(1, ...buckets.map((b) => b.count))
   const hasStats = placeCount > 0
+
+  // Top cuisines, weighted by visit count (a place with 10 visits says more
+  // about taste than one drive-by).
+  const cuisineWeights = new Map<string, { emoji: string; label: string; weight: number }>()
+  for (const up of cuisinePlaces) {
+    const chip = cuisineChip(up.place.cuisine)
+    if (!chip) continue
+    const key = chip.label
+    const entry = cuisineWeights.get(key) ?? { emoji: chip.emoji, label: chip.label, weight: 0 }
+    entry.weight += Math.max(1, up._count.visits)
+    cuisineWeights.set(key, entry)
+  }
+  const topCuisines = Array.from(cuisineWeights.values()).sort((a, b) => b.weight - a.weight).slice(0, 5)
+  const maxCuisine = Math.max(1, ...topCuisines.map((c) => c.weight))
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6">
@@ -125,6 +144,28 @@ export default async function ProfilePage() {
             </div>
           </div>
 
+          {topCuisines.length > 0 && (
+            <div className="card p-4 mb-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-3">Your top cuisines</p>
+              <div className="space-y-2">
+                {topCuisines.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2">
+                    <span className="w-7 text-lg text-center" aria-hidden>{c.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between text-sm mb-0.5">
+                        <span className="font-medium text-stone-700 truncate">{c.label}</span>
+                        <span className="text-xs text-stone-400 tabular-nums">{c.weight} visit{c.weight !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full" style={{ width: `${(c.weight / maxCuisine) * 100}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {mostVisited && mostVisited._count.visits > 0 && (
             <div className="card p-4 mb-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Most visited</p>
@@ -156,6 +197,15 @@ export default async function ProfilePage() {
           <p className="text-sm">Add some places and your stats will show up here.</p>
         </div>
       )}
+
+      <Link href="/recap" className="card p-4 mb-4 flex items-center gap-3 active:scale-[0.99] transition-all duration-150">
+        <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600 flex items-center justify-center text-lg" aria-hidden>🎉</span>
+        <span className="flex-1">
+          <span className="block font-semibold text-stone-800">Your {new Date().getFullYear()} in Food</span>
+          <span className="block text-xs text-stone-500">Top spots, repeat dishes, flavor profile</span>
+        </span>
+        <ChevronRight className="w-4 h-4 text-stone-400" />
+      </Link>
 
       <NotificationsCard />
       <ShareListCard initialSlug={sharedList?.slug ?? null} />

@@ -141,6 +141,7 @@ model Visit {
 model Meal {
   id              String  @id @default(cuid())
   userPlaceId     String
+  createdAt       DateTime @default(now())
   name            String
   description     String? @db.Text
   rating          Float?

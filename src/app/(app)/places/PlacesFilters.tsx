@@ -12,21 +12,23 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: 'name', label: 'A–Z' },
 ]
 
-export default function PlacesFilters({ q, sort, price }: { q: string; sort: SortKey; price: number | null }) {
+export default function PlacesFilters({ q, sort, price, fav }: { q: string; sort: SortKey; price: number | null; fav: boolean }) {
   const router = useRouter()
   const [text, setText] = useState(q)
 
   // Keep local input in sync if the URL changes from elsewhere (e.g. back nav).
   useEffect(() => setText(q), [q])
 
-  function push(next: { q?: string; sort?: SortKey; price?: number | null }) {
+  function push(next: { q?: string; sort?: SortKey; price?: number | null; fav?: boolean }) {
     const params = new URLSearchParams()
     const nextQ = next.q !== undefined ? next.q : text
     const nextSort = next.sort !== undefined ? next.sort : sort
     const nextPrice = next.price !== undefined ? next.price : price
+    const nextFav = next.fav !== undefined ? next.fav : fav
     if (nextQ.trim()) params.set('q', nextQ.trim())
     if (nextSort !== 'recent') params.set('sort', nextSort)
     if (nextPrice) params.set('price', String(nextPrice))
+    if (nextFav) params.set('fav', '1')
     const qs = params.toString()
     router.push(qs ? `/places?${qs}` : '/places')
   }
@@ -69,6 +71,14 @@ export default function PlacesFilters({ q, sort, price }: { q: string; sort: Sor
           </button>
         ))}
         <div className="flex-shrink-0 w-px bg-stone-200 mx-1" />
+        <button
+          onClick={() => push({ fav: !fav })}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border active:scale-95 transition ${
+            fav ? 'bg-orange-500 text-white border-orange-500' : 'border-stone-200 text-stone-500 bg-white/70'
+          }`}
+        >
+          ★ Favorites
+        </button>
         {[1, 2, 3, 4].map((p) => (
           <button
             key={p}

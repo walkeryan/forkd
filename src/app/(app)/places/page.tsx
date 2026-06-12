@@ -20,7 +20,7 @@ const SORT_ORDER: Record<SortKey, Prisma.UserPlaceOrderByWithRelationInput> = {
 export default async function PlacesPage({
   searchParams,
 }: {
-  searchParams: { q?: string; sort?: string; price?: string }
+  searchParams: { q?: string; sort?: string; price?: string; fav?: string }
 }) {
   const session = await auth()
   const q = searchParams.q?.trim() ?? ''
@@ -28,12 +28,15 @@ export default async function PlacesPage({
     ? (searchParams.sort as SortKey)
     : 'recent'
   const price = searchParams.price ? Number(searchParams.price) : null
+  const fav = searchParams.fav === '1'
 
   const where: Prisma.UserPlaceWhereInput = {
     userId: session!.user!.id,
     status: 'visited',
     ...(q && { place: { name: { contains: q, mode: 'insensitive' } } }),
     ...(price && { priceRange: price }),
+    // Favorites = places where a favorite meal lives.
+    ...(fav && { meals: { some: { isFavorite: true } } }),
   }
 
   const userPlaces = await prisma.userPlace.findMany({
@@ -42,7 +45,7 @@ export default async function PlacesPage({
     orderBy: SORT_ORDER[sort],
   })
 
-  const filtered = !!q || !!price
+  const filtered = !!q || !!price || fav
   const totalTracked = filtered ? await prisma.userPlace.count({ where: { userId: session!.user!.id, status: 'visited' } }) : userPlaces.length
 
   return (
@@ -59,7 +62,7 @@ export default async function PlacesPage({
         </div>
       </div>
 
-      {totalTracked > 0 && <PlacesFilters q={q} sort={sort} price={price} />}
+      {totalTracked > 0 && <PlacesFilters q={q} sort={sort} price={price} fav={fav} />}
 
       {userPlaces.length === 0 ? (
         filtered ? (
