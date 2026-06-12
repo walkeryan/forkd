@@ -9,7 +9,7 @@ import PlaceAvatar from '@/components/PlaceAvatar'
 import PlaceSpecials from '@/components/PlaceSpecials'
 import { cuisineChip } from '@/lib/places'
 import type { UserPlaceWithRelations, MealWithRelations, VisitWithRelations, PlaceTagWithTag, PlaceSpecial } from '@/types/models'
-import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft, Tag as TagIcon } from 'lucide-react'
+import { MapPin, Plus, Calendar, UtensilsCrossed, Camera, ImagePlus, Star, ChevronUp, MoreVertical, Trash2, Loader2, Pencil, Check, X, ArrowLeft, Tag as TagIcon } from 'lucide-react'
 
 export default function PlaceDetailClient({ userPlace, allTags = [], specials = [] }: { userPlace: UserPlaceWithRelations; allTags?: { id: string; name: string }[]; specials?: PlaceSpecial[] }) {
   const router = useRouter()
@@ -133,13 +133,16 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
   }
 
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
     setUploadingPhoto(true)
-    const form = new FormData()
-    form.append('file', file)
-    form.append('userPlaceId', userPlace.id)
-    await mutate(() => fetch('/api/photos', { method: 'POST', body: form }), 'Photo added')
+    for (const file of files) {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('userPlaceId', userPlace.id)
+      await mutate(() => fetch('/api/photos', { method: 'POST', body: form }), files.length === 1 ? 'Photo added' : undefined)
+    }
+    if (files.length > 1) toast.success(`${files.length} photos added`)
     setUploadingPhoto(false)
     e.target.value = ''
   }
@@ -446,10 +449,16 @@ export default function PlaceDetailClient({ userPlace, allTags = [], specials = 
             <span className="w-8 h-8 rounded-lg bg-orange-100/70 text-orange-600 flex items-center justify-center"><Camera className="w-4 h-4" /></span>
             <span>Photos ({photos.length})</span>
           </div>
-          <label className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-full bg-orange-100/70 text-orange-600 active:scale-90 transition-transform">
-            {uploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-5 h-5" />}
-            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={uploadPhoto} />
-          </label>
+          <div className="flex items-center gap-1.5">
+            <label className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-full bg-orange-100/70 text-orange-600 active:scale-90 transition-transform" aria-label="Take a photo">
+              {uploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={uploadPhoto} disabled={uploadingPhoto} />
+            </label>
+            <label className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-full bg-orange-100/70 text-orange-600 active:scale-90 transition-transform" aria-label="Choose from gallery">
+              <ImagePlus className="w-4 h-4" />
+              <input type="file" accept="image/*" multiple className="hidden" onChange={uploadPhoto} disabled={uploadingPhoto} />
+            </label>
+          </div>
         </div>
         {photos.length === 0 ? (
           <p className="text-sm text-stone-400">No photos yet — tap + to add one</p>

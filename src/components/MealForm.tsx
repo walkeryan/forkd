@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Camera, ChevronDown, ChevronUp, Loader2, X } from 'lucide-react'
+import { Camera, ChevronDown, ChevronUp, ImagePlus, Loader2, X } from 'lucide-react'
 import StarRating from '@/components/StarRating'
 import { getMenuSuggestions, searchDishes } from '@/lib/menuData'
 
@@ -45,6 +45,7 @@ export default function MealForm({
   const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus()
@@ -209,15 +210,27 @@ export default function MealForm({
               </button>
             </div>
           ))}
+          {/* Browsers vary on whether a bare file input offers the camera, so
+              give explicit Camera (capture) and Gallery (picker) buttons. */}
+          <button
+            type="button"
+            onClick={() => cameraInputRef.current?.click()}
+            className="w-16 h-16 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-stone-300 rounded-xl text-stone-400 hover:border-orange-300 hover:text-orange-500 active:bg-stone-50 transition-colors"
+            aria-label="Take a photo"
+          >
+            <Camera className="w-5 h-5" />
+            <span className="text-[10px]">Camera</span>
+          </button>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-16 h-16 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-stone-300 rounded-xl text-stone-400 hover:border-orange-300 hover:text-orange-500 active:bg-stone-50 transition-colors"
-            aria-label="Add photo"
+            aria-label="Choose from gallery"
           >
-            <Camera className="w-5 h-5" />
-            <span className="text-[10px]">Photo</span>
+            <ImagePlus className="w-5 h-5" />
+            <span className="text-[10px]">Gallery</span>
           </button>
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={addFiles} />
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={addFiles} />
         </div>
       </div>
